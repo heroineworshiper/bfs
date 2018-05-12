@@ -1,0 +1,372 @@
+# -*- coding: utf-8 -*-
+
+
+# Big F*n simulator.
+# Create a tool to cut out the windows
+
+import FreeCAD
+import math
+import Draft, Part
+
+
+
+def toRad(angle):
+    return angle * math.pi * 2 / 360
+
+innerPoints = []
+outerPoints = []
+
+
+
+def polarToXYZ(angle, radius, z):
+    x = radius * math.cos(angle)
+    y = -radius * math.sin(angle)
+    return App.Vector(x, y, z)
+
+
+def ray(angle, radius1, radius2, z):
+    point1 = polarToXYZ(angle, radius1, z)
+    point2 = polarToXYZ(angle, radius2, z)
+    innerPoints.append(point1)
+    outerPoints.append(point2)
+    
+
+# wireframe for forward windows
+def makeFan(angle1, angle2, radius1, radius2, z):
+    frontSegments = 13
+    pillarAngle1 = toRad(8)
+    pillarAngle2 = toRad(172)
+    pillarA = toRad(0.25)
+
+    del innerPoints[:]
+    del outerPoints[:]
+    # create the points
+    ray(angle1, radius1, radius2, z)
+
+    for i in range(frontSegments):
+        centerAngle = i * (pillarAngle2 - pillarAngle1) / (frontSegments - 1) + pillarAngle1
+        if centerAngle > angle1 and centerAngle < angle2:
+            ray(centerAngle - pillarA, radius1, radius2, z)
+            ray(centerAngle + pillarA, radius1, radius2, z)
+
+    ray(angle2, radius1, radius2, z)
+
+    # create the wire from the points
+    wirePoints = []
+    i = 0
+    while i < len(outerPoints) - 1:
+        wirePoints.append(innerPoints[i])
+        wirePoints.append(outerPoints[i])
+        wirePoints.append(outerPoints[i + 1])
+        wirePoints.append(innerPoints[i + 1])
+        i = i + 2
+
+    wirePoints.append(App.Vector(0, radius1 / 2, z))
+    wirePoints.append(innerPoints[0])
+
+    wire = Draft.makeWire(wirePoints, closed=False, face=False, support=None)
+    # hide it
+    wire.ViewObject.Visibility = False
+    return wire
+
+
+
+
+
+# wireframe for rear windows
+def makeFan2(z):
+    rearSegments = 11
+    rearRadius1 = 3000
+    rearRadius2 = 5000
+    rearA = toRad(3.5)
+    rearAngle1 = rearA
+    rearAngle2 = toRad(180) - rearA
+
+    del innerPoints[:]
+    del outerPoints[:]
+
+
+    # create the points
+    for i in range(rearSegments):
+        centerAngle = i * (rearAngle2 - rearAngle1) / (rearSegments - 1) + rearAngle1
+        ray(centerAngle - rearA, rearRadius1, rearRadius2, z)
+        ray(centerAngle + rearA, rearRadius1, rearRadius2, z)
+
+    # create the wireframe from the points
+    wirePoints = []
+    i = 0
+    while i < len(outerPoints) - 1:
+        wirePoints.append(innerPoints[i])
+        wirePoints.append(outerPoints[i])
+        wirePoints.append(outerPoints[i + 1])
+        wirePoints.append(innerPoints[i + 1])
+        i = i + 2
+
+    wirePoints.append(App.Vector(0, rearRadius1 / 2, z))
+    wirePoints.append(innerPoints[0])
+    wire = Draft.makeWire(wirePoints, closed=False, face=False, support=None)
+
+    # hide it
+    wire.ViewObject.Visibility = False
+    return wire
+
+
+
+
+
+
+# create the cross sections
+fans = []
+startingSideAngle = toRad(0)
+endingSideAngle = toRad(15)
+radius1 = [ 3000, 2500 ]
+radius2 = [ 4500, 3500 ]
+window1Z = 38500
+window2Z = 42001
+windowH = 800
+pillarH = 40
+frontZ = [ 
+    window1Z, window1Z + windowH, window1Z + windowH + pillarH, window1Z + windowH * 2 + pillarH, 
+    window2Z, window2Z + windowH, window2Z + windowH + pillarH, window2Z + windowH * 2 + pillarH, 
+]
+totalWindowZ = frontZ[len(frontZ) - 1] - 39000
+
+for i in range(len(frontZ)):
+    sideAngle = endingSideAngle * (frontZ[i] - window1Z) / totalWindowZ
+    fans.append(makeFan(sideAngle, toRad(180) - sideAngle, radius1[i / 4], radius2[i / 4], frontZ[i]))
+
+# create the solids
+lofts = []
+i = 0
+while i < len(frontZ) - 1:
+    loft = App.ActiveDocument.addObject('Part::Loft','Loft')
+    loft.Sections = [fans[i], fans[i + 1]]
+    loft.Solid = True
+    loft.ViewObject.Visibility = False
+    lofts.append(loft)
+    i = i + 2
+
+# fillet the corners
+edges = []
+# bottom rear edges
+edges.append((1,200,200))
+edges.append((164,200,200))
+
+# inner edges
+edges.append((10,100,100))
+edges.append((16,100,100))
+edges.append((22,100,100))
+edges.append((28,100,100))
+edges.append((34,100,100))
+edges.append((40,100,100))
+edges.append((46,100,100))
+edges.append((52,100,100))
+edges.append((58,100,100))
+edges.append((64,100,100))
+edges.append((70,100,100))
+edges.append((76,100,100))
+edges.append((82,100,100))
+edges.append((88,100,100))
+edges.append((94,100,100))
+edges.append((100,100,100))
+edges.append((106,100,100))
+edges.append((112,100,100))
+edges.append((118,100,100))
+edges.append((124,100,100))
+edges.append((130,100,100))
+edges.append((136,100,100))
+edges.append((142,100,100))
+edges.append((148,100,100))
+edges.append((154,100,100))
+edges.append((160,100,100))
+fillet = App.ActiveDocument.addObject("Part::Fillet","Fillet")
+fillet.Base = lofts[0]
+fillet.Edges = edges
+
+edges = []
+# inner edges
+edges.append((8,100,100))
+edges.append((14,100,100))
+edges.append((20,100,100))
+edges.append((26,100,100))
+edges.append((32,100,100))
+edges.append((38,100,100))
+edges.append((44,100,100))
+edges.append((50,100,100))
+edges.append((56,100,100))
+edges.append((62,100,100))
+edges.append((68,100,100))
+edges.append((74,100,100))
+edges.append((80,100,100))
+edges.append((86,100,100))
+edges.append((92,100,100))
+edges.append((98,100,100))
+edges.append((104,100,100))
+edges.append((110,100,100))
+edges.append((116,100,100))
+edges.append((122,100,100))
+edges.append((128,100,100))
+edges.append((134,100,100))
+edges.append((140,100,100))
+edges.append((146,100,100))
+edges.append((152,100,100))
+edges.append((158,100,100))
+
+# bottom front edges
+edges.append((3,0,150))
+edges.append((166,150,0))
+fillet = App.ActiveDocument.addObject("Part::Fillet","Fillet")
+fillet.Base = lofts[1]
+fillet.Edges = edges
+
+
+edges = []
+edges.append((1,200,200))
+edges.append((140,200,200))
+
+
+edges.append((10,100,100))
+edges.append((16,100,100))
+edges.append((22,100,100))
+edges.append((28,100,100))
+edges.append((34,100,100))
+edges.append((40,100,100))
+edges.append((46,100,100))
+edges.append((52,100,100))
+edges.append((58,100,100))
+edges.append((64,100,100))
+edges.append((70,100,100))
+edges.append((76,100,100))
+edges.append((82,100,100))
+edges.append((88,100,100))
+edges.append((94,100,100))
+edges.append((100,100,100))
+edges.append((106,100,100))
+edges.append((112,100,100))
+edges.append((118,100,100))
+edges.append((124,100,100))
+edges.append((130,100,100))
+edges.append((136,100,100))
+
+
+fillet = App.ActiveDocument.addObject("Part::Fillet","Fillet")
+fillet.Base = lofts[2]
+fillet.Edges = edges
+
+
+edges = []
+edges.append((3,100,100))
+edges.append((142,100,100))
+
+
+edges.append((8,100,100))
+edges.append((14,100,100))
+edges.append((20,100,100))
+edges.append((26,100,100))
+edges.append((32,100,100))
+edges.append((38,100,100))
+edges.append((44,100,100))
+edges.append((50,100,100))
+edges.append((56,100,100))
+edges.append((62,100,100))
+edges.append((68,100,100))
+edges.append((74,100,100))
+edges.append((80,100,100))
+edges.append((86,100,100))
+edges.append((92,100,100))
+edges.append((98,100,100))
+edges.append((104,100,100))
+edges.append((110,100,100))
+edges.append((116,100,100))
+edges.append((122,100,100))
+edges.append((128,100,100))
+edges.append((134,100,100))
+
+
+fillet = App.ActiveDocument.addObject("Part::Fillet","Fillet")
+fillet.Base = lofts[3]
+fillet.Edges = edges
+
+
+rearZ = [ 32001, 32500, 34000, 34500, 36000, 36500 ]
+fans = []
+for i in rearZ:
+    fans.append(makeFan2(i))
+
+lofts = []
+i = 0
+while i < len(rearZ) - 1:
+    loft = App.ActiveDocument.addObject('Part::Loft','Loft')
+    loft.Sections = [fans[i], fans[i + 1]]
+    loft.Solid = True
+    loft.ViewObject.Visibility = False
+    lofts.append(loft)
+    i = i + 2
+
+# fillet the corners
+edges = []
+edges.append((1,100.00,100.00))
+edges.append((3,100.00,100.00))
+edges.append((8,100.00,100.00))
+edges.append((10,100.00,100.00))
+edges.append((14,100.00,100.00))
+edges.append((16,100.00,100.00))
+edges.append((20,100.00,100.00))
+edges.append((22,100.00,100.00))
+edges.append((26,100.00,100.00))
+edges.append((28,100.00,100.00))
+edges.append((32,100.00,100.00))
+edges.append((34,100.00,100.00))
+edges.append((38,100.00,100.00))
+edges.append((40,100.00,100.00))
+edges.append((44,100.00,100.00))
+edges.append((46,100.00,100.00))
+edges.append((50,100.00,100.00))
+edges.append((52,100.00,100.00))
+edges.append((56,100.00,100.00))
+edges.append((58,100.00,100.00))
+edges.append((62,100.00,100.00))
+edges.append((64,100.00,100.00))
+edges.append((68,100.00,100.00))
+edges.append((70,100.00,100.00))
+edges.append((74,100.00,100.00))
+edges.append((76,100.00,100.00))
+edges.append((80,100.00,100.00))
+edges.append((82,100.00,100.00))
+edges.append((86,100.00,100.00))
+edges.append((88,100.00,100.00))
+edges.append((92,100.00,100.00))
+edges.append((94,100.00,100.00))
+edges.append((98,100.00,100.00))
+edges.append((100,100.00,100.00))
+edges.append((104,100.00,100.00))
+edges.append((106,100.00,100.00))
+edges.append((110,100.00,100.00))
+edges.append((112,100.00,100.00))
+edges.append((116,100.00,100.00))
+edges.append((118,100.00,100.00))
+edges.append((122,100.00,100.00))
+edges.append((124,100.00,100.00))
+edges.append((128,100.00,100.00))
+edges.append((130,100.00,100.00))
+
+for i in range(3):
+    fillet = App.ActiveDocument.addObject("Part::Fillet","Fillet")
+    fillet.Base = lofts[i]
+    fillet.Edges = edges
+
+
+
+App.ActiveDocument.recompute()
+
+
+
+
+
+
+
+
+
+
+
+
