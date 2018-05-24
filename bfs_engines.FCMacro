@@ -1,0 +1,62 @@
+# position & size the engines for the BFS
+# user must paste 6 raptors before running the script & they need to be named
+# raptor, raptor001 ... raptor005
+# also need 4 mounts
+# scripts can't call copy & paste
+
+
+import FreeCAD
+
+coords = [
+    0, -800, 0, 225,
+    0, 800, 0, 45,
+    2000, 2000, 2090, 225,
+    2000, -2000, 2090, 135,
+    -2000, -2000, 2090, 45,
+    -2000, 2000, 2090, -45,
+]
+
+current_coord = 0
+for obj in FreeCAD.ActiveDocument.Objects:
+    #print 'label=', obj.Label, ' name=', obj.Name
+    if obj.Label.startswith('raptor') and obj.Name.startswith('Part'):
+        #print obj.Group
+        for obj2 in obj.Group:
+            #print obj2.Label
+            if obj2.Label.startswith('sea level nozzle'):
+                if current_coord < 2:
+                    obj2.ViewObject.Visibility = True
+                else:
+                    obj2.ViewObject.Visibility = False
+            if obj2.Label.startswith('vac nozzle'):
+                if current_coord < 2:
+                    obj2.ViewObject.Visibility = False
+                else:
+                    obj2.ViewObject.Visibility = True
+
+        obj.Placement = App.Placement(
+            App.Vector(
+                coords[current_coord * 4],
+                coords[current_coord * 4 + 1],
+                coords[current_coord * 4 + 2]), 
+            App.Rotation(App.Vector(0,0,1), 
+                coords[current_coord * 4 + 3]))
+        current_coord = current_coord + 1
+
+# place 4 vacuum raptor mounts
+current_coord = 2
+for obj in FreeCAD.ActiveDocument.Objects:
+    if obj.Label.startswith('mount') and obj.Name.startswith('Part'):
+        obj.Placement = App.Placement(
+            App.Vector(
+                coords[current_coord * 4],
+                coords[current_coord * 4 + 1],
+                coords[current_coord * 4 + 2]), 
+            App.Rotation(App.Vector(0,0,1), 
+                coords[current_coord * 4 + 3]))
+        current_coord = current_coord + 1
+
+
+
+
+

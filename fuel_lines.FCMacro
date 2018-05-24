@@ -1,0 +1,55 @@
+# position & size the fuel lines for the BFS
+# user must paste 4 fuel line objects before running the script
+# fuel line, fuel line001, fuel line002, fuel line003
+# scripts can't call copy & paste
+
+
+import FreeCAD
+
+
+positions = [
+    0, 200, 0,
+    0, -200, 0,
+    0, -200, 0,
+    0, 200, 0,
+]
+
+angles = [
+    10,
+    190,
+    -10,
+    170
+]
+
+current_coord = 0
+for obj in FreeCAD.ActiveDocument.Objects:
+    #print 'label=', obj.Label, ' name=', obj.Name
+    if obj.Label.startswith('fuel line') and obj.Name.startswith('Part'):
+        #print obj.Group
+        for obj2 in obj.Group:
+            #print obj2.Label
+            if obj2.Label.startswith('fuel line nozzle revolve'):
+                if current_coord < 2:
+                    obj2.ViewObject.Visibility = True
+                else:
+                    obj2.ViewObject.Visibility = False
+            if obj2.Label.startswith('fuel line nozzle2 revolve'):
+                if current_coord < 2:
+                    obj2.ViewObject.Visibility = False
+                else:
+                    obj2.ViewObject.Visibility = True
+
+
+
+        obj.Placement = App.Placement(
+            App.Vector(positions[current_coord * 3 + 0], 
+                positions[current_coord * 3 + 1], 
+                positions[current_coord * 3 + 2]), 
+            App.Rotation(App.Vector(0,0,1), angles[current_coord]))
+        current_coord = current_coord + 1
+
+
+
+
+
+
