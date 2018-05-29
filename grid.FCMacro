@@ -116,6 +116,9 @@ DEPTH = Draft.Vector(INNER_RADIUS - OUTER_RADIUS, 0, 0)
 ARCH_H = 125.0
 
 
+# chopped corners
+cornerW = WIDTH_ANGLE / (INTERSECTIONS - 1)
+cornerH = GRID_H2 / (INTERSECTIONS - 1)
 
 diagonals1 = []
 diagonals2 = []
@@ -239,22 +242,22 @@ def hingeArc(center, radius, startDeg, endDeg):
 
 
 
-def makeLoft(sections):
+def makeLoft(sections, solid, ruled, closed):
     loft = doc.addObject('Part::Loft','Loft')
     loft.Sections = sections
-    loft.Solid = False
-    loft.Ruled = True
-    loft.Closed = True
+    loft.Solid = solid
+    loft.Ruled = ruled
+    loft.Closed = closed
     return loft
 
 
 
 def makeHinge():
     # draw all attachment points
-    for i in range(len(hingePoints)):
-        xyz = hingePoints[i]
-        point = Draft.makePoint(xyz)
-        point.Label = 'hingePoints[%d]' % i
+    #for i in range(len(hingePoints)):
+        #xyz = hingePoints[i]
+        #point = Draft.makePoint(xyz)
+        #point.Label = 'hingePoints[%d]' % i
 
     cylinder = doc.addObject("Part::Cylinder","Cylinder")
     cylinder.Label = "Cylinder"
@@ -268,7 +271,9 @@ def makeHinge():
 
 
     # outer arc
-    topArc = hingeArc(App.Vector(HINGE_Y, -750, 0.0), radius, 45, 135)
+    OUTER_Y = -750.0
+    INNER_Y = -600.0
+    topArc = hingeArc(App.Vector(HINGE_Y, OUTER_Y, 0.0), radius, 45, 135)
 
     # join outer arc to grid
     points = makeBezierLine(
@@ -277,7 +282,7 @@ def makeHinge():
     points.extend(topArc)
     topLine = Draft.makeWire(points, closed=False, face=False, support=None)
 
-    bottomArc = hingeArc(App.Vector(HINGE_Y, -750, 0.0), radius, -135, -225)
+    bottomArc = hingeArc(App.Vector(HINGE_Y, OUTER_Y, 0.0), radius, -135, -225)
     points = makeBezierLine(
         BezierPoint3D(Draft.Vector(0.0, 0.0, 0.0), hingePoints[23], Draft.Vector(-50.0, 25.0, 0.0)),
         BezierPoint3D(Draft.Vector(100.0, 0.0, 0.0), bottomArc[0], Draft.Vector(0.0, 0.0, 0.0)))
@@ -286,7 +291,7 @@ def makeHinge():
     
     
     # inner arc
-    topArc = hingeArc(App.Vector(HINGE_Y, -600, 0.0), radius, 45, 135)
+    topArc = hingeArc(App.Vector(HINGE_Y, INNER_Y, 0.0), radius, 45, 135)
 
     # join inner arc to grid
     points = makeBezierLine(
@@ -297,15 +302,16 @@ def makeHinge():
     points.extend(topArc)
     topLine2 = Draft.makeWire(points, closed=False, face=False, support=None)
 
-    bottomArc = hingeArc(App.Vector(HINGE_Y, -600, 0.0), radius, -135, -225)
+    bottomArc = hingeArc(App.Vector(HINGE_Y, INNER_Y, 0.0), radius, -135, -225)
     points = makeBezierLine(
         BezierPoint3D(Draft.Vector(0.0, 0.0, 0.0), hingePoints[2], Draft.Vector(-50.0, -25.0, 0.0)),
         BezierPoint3D(Draft.Vector(100.0, 0.0, 0.0), bottomArc[0], Draft.Vector(0.0, 0.0, 0.0)))
+    strutX2 = points[6].x
     points.extend(bottomArc)
     bottomLine2 = Draft.makeWire(points, closed=False, face=False, support=None)
 
 
-    makeLoft([topLine, bottomLine, bottomLine2, topLine2])
+    makeLoft([topLine, bottomLine, bottomLine2, topLine2], False, True, True)
 
     # attach grid center to top
     Draft.makePoint(topAttach1)
@@ -324,14 +330,69 @@ def makeHinge():
     topPoints = makeBezierLine(
         BezierPoint3D(Draft.Vector(0.0, 0.0, 0.0), hingePoints[9], Draft.Vector(0.0, -200.0, 0.0)),
         BezierPoint3D(Draft.Vector(100.0, 50.0, 0.0), topAttach2, Draft.Vector(0.0, 0.0, 0.0)))
+    topBumperAttach = topPoints[5]
     topLine2 = Draft.makeWire(topPoints, closed=False, face=False, support=None)
 
     bottomPoints = makeBezierLine(
         BezierPoint3D(Draft.Vector(0.0, 0.0, 0.0), hingePoints[10], Draft.Vector(500.0, -200.0, 0.0)),
         BezierPoint3D(Draft.Vector(100.0, 50.0, 0.0), topAttach2 + DEPTH / 2, Draft.Vector(0.0, 0.0, 0.0)))
+    bottomBumperAttach = bottomPoints[5]
     bottomLine2 = Draft.makeWire(bottomPoints, closed=False, face=False, support=None)
     
-    makeLoft([topLine1, bottomLine1, bottomLine2, topLine2])
+    makeLoft([topLine1, bottomLine1, bottomLine2, topLine2], False, True, True)
+
+
+
+    # the bumper
+    z = -radius
+    insetY = 100
+    insetX = 30
+    bumperFront = Draft.makeWire([
+            Draft.Vector(topBumperAttach.x - insetX, topBumperAttach.y + insetY, z),
+            Draft.Vector(topBumperAttach.x - insetX, 0.0, z),
+            Draft.Vector(bottomBumperAttach.x + insetX, 0.0, z),
+            Draft.Vector(bottomBumperAttach.x + insetX, bottomBumperAttach.y + insetY, z)
+        ], 
+        closed=True, 
+        face=True, 
+        support=None)
+    bumperRear = Draft.makeWire([
+            topBumperAttach,
+            Draft.Vector(topBumperAttach.x, 0.0, GRID_TOP - cornerH),
+            Draft.Vector(bottomBumperAttach.x, 0.0, GRID_TOP - cornerH),
+            bottomBumperAttach
+        ], 
+        closed=True, 
+        face=False, 
+        support=None)
+    makeLoft([bumperFront, bumperRear], True, True, True)
+
+    # the struts
+    strutX1 = (topBumperAttach.x + bottomBumperAttach.x) / 2.0
+    strutY1 = -50.0
+    strutZ1 = z - 20.0
+    strutZ2 = strutZ1 - 150.0
+    strutThickness = 40.0
+    strutX2 = strutX2 + strutThickness / 2.0
+    strutTop = Draft.makeWire([ # clockwise from top right
+            Draft.Vector(strutX1 + strutThickness / 2.0, strutY1, strutZ1),
+            Draft.Vector(strutX1 + strutThickness / 2.0, strutY1, strutZ2),
+            Draft.Vector(strutX2 + strutThickness / 2.0, INNER_Y, strutZ2),
+            Draft.Vector(strutX2 + strutThickness / 2.0, INNER_Y, strutZ1)
+        ], 
+        closed=True, 
+        face=True, 
+        support=None)
+    strutBottom = Draft.makeWire([ # clockwise from top right
+            Draft.Vector(strutX1 - strutThickness / 2.0, strutY1, strutZ1),
+            Draft.Vector(strutX1 - strutThickness / 2.0, strutY1, strutZ2),
+            Draft.Vector(strutX2 - strutThickness / 2.0, INNER_Y, strutZ2),
+            Draft.Vector(strutX2 - strutThickness / 2.0, INNER_Y, strutZ1)
+        ], 
+        closed=True, 
+        face=True, 
+        support=None)
+    makeLoft([strutTop, strutBottom], True, True, False)
 
 
 
@@ -504,9 +565,6 @@ def makeSolid(point1, point2, point3, point4, thickness):
 
 
 def makeGrid():
-    # chopped corners
-    cornerW = WIDTH_ANGLE / (INTERSECTIONS - 1)
-    cornerH = GRID_H2 / (INTERSECTIONS - 1)
     # start at double the height
     y = GRID_BOTTOM - GRID_H
     counter = 0
