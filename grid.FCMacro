@@ -262,9 +262,9 @@ def makeHinge():
     cylinder = doc.addObject("Part::Cylinder","Cylinder")
     cylinder.Label = "Cylinder"
     cylinder.Radius = PIVOT_RADIUS
-    cylinder.Height = 1700
+    cylinder.Height = 400
     cylinder.Placement = App.Placement(
-        App.Vector(HINGE_Y, cylinder.Height / 2, 0.0),
+        App.Vector(HINGE_Y, -400, 0.0),
         App.Rotation(App.Vector(1,0,0),90))
 
     radius = PIVOT_RADIUS + 25
@@ -311,9 +311,10 @@ def makeHinge():
     bottomLine2 = Draft.makeWire(points, closed=False, face=False, support=None)
 
 
-    makeLoft([topLine, bottomLine, bottomLine2, topLine2], False, True, True)
+    strap1 = makeLoft([topLine, bottomLine, bottomLine2, topLine2], False, True, True)
+    strap1.Label = 'Strap 1'
 
-    # attach grid center to top
+    # strap grid center to top
     Draft.makePoint(topAttach1)
     Draft.makePoint(topAttach2)
     
@@ -339,17 +340,19 @@ def makeHinge():
     bottomBumperAttach = bottomPoints[5]
     bottomLine2 = Draft.makeWire(bottomPoints, closed=False, face=False, support=None)
     
-    makeLoft([topLine1, bottomLine1, bottomLine2, topLine2], False, True, True)
+    strap2 = makeLoft([topLine1, bottomLine1, bottomLine2, topLine2], False, True, True)
+    strap2.Label = 'Strap 2'
 
 
-
-    # the bumper
+    # the bumper.  Mirror doesn't work on this shape
     z = -radius
     insetY = 100
     insetX = 30
     bumperFront = Draft.makeWire([
             Draft.Vector(topBumperAttach.x - insetX, topBumperAttach.y + insetY, z),
             Draft.Vector(topBumperAttach.x - insetX, 0.0, z),
+            Draft.Vector(topBumperAttach.x - insetX, -topBumperAttach.y - insetY, z),
+            Draft.Vector(bottomBumperAttach.x + insetX, -topBumperAttach.y - insetY, z),
             Draft.Vector(bottomBumperAttach.x + insetX, 0.0, z),
             Draft.Vector(bottomBumperAttach.x + insetX, bottomBumperAttach.y + insetY, z)
         ], 
@@ -359,19 +362,21 @@ def makeHinge():
     bumperRear = Draft.makeWire([
             topBumperAttach,
             Draft.Vector(topBumperAttach.x, 0.0, GRID_TOP - cornerH),
+            Draft.Vector(topBumperAttach.x, -topBumperAttach.y, topBumperAttach.z),
+            Draft.Vector(bottomBumperAttach.x, -bottomBumperAttach.y, bottomBumperAttach.z),
             Draft.Vector(bottomBumperAttach.x, 0.0, GRID_TOP - cornerH),
             bottomBumperAttach
         ], 
         closed=True, 
         face=False, 
         support=None)
-    makeLoft([bumperFront, bumperRear], True, True, True)
+    bumper = makeLoft([bumperFront, bumperRear], True, True, True)
 
     # the struts
     strutX1 = (topBumperAttach.x + bottomBumperAttach.x) / 2.0
     strutY1 = -50.0
-    strutZ1 = z - 20.0
-    strutZ2 = strutZ1 - 150.0
+    strutZ1 = z - 75.0
+    strutZ2 = strutZ1 - 100.0
     strutThickness = 40.0
     strutX2 = strutX2 + strutThickness / 2.0
     strutTop = Draft.makeWire([ # clockwise from top right
@@ -392,9 +397,28 @@ def makeHinge():
         closed=True, 
         face=True, 
         support=None)
-    makeLoft([strutTop, strutBottom], True, True, False)
+    strut = makeLoft([strutTop, strutBottom], True, True, False)
 
 
+
+
+    mirror = doc.addObject("Part::Mirroring")
+    mirror.Source = cylinder
+    mirror.Normal = Draft.Vector(0.0, 1.0, 0.0)
+
+
+    mirror = doc.addObject("Part::Mirroring")
+    mirror.Source = strut
+    mirror.Normal = Draft.Vector(0.0, 1.0, 0.0)
+
+    mirror = doc.addObject("Part::Mirroring")
+    mirror.Source = strap1
+    mirror.Normal = Draft.Vector(0.0, 1.0, 0.0)
+    
+    mirror = doc.addObject("Part::Mirroring")
+    mirror.Source = strap2
+    mirror.Normal = Draft.Vector(0.0, 1.0, 0.0)
+    
 
 
 def smooth(points):

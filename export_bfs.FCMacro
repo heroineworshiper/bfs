@@ -1,0 +1,101 @@
+import FreeCAD
+import Mesh
+import MeshPart
+
+
+
+
+
+doc = FreeCAD.ActiveDocument
+guiDoc = Gui.activeDocument()
+
+
+
+objects = [
+    
+    'wing',
+    'Loft',
+    'fuse revolve',
+    'nose',
+    'landing fairing revolve (Mirror #3)',
+    'landing fairing revolve',
+    'tank',
+    #'raptor',
+    #'raptor001',
+    #'raptor002',
+    #'raptor003',
+    #'raptor004',
+    #'raptor005',
+    'fuel line nozzle revolve',
+    'fuel line sweep',
+    'fuel line cube',
+    'fuel line nozzle revolve002',
+    'fuel line sweep002',
+    'fuel line cube002',
+    'fuel line nozzle revolve003',
+    'fuel line nozzle2 revolve003',
+    'fuel line sweep003',
+    'fuel line cube003',
+    'fuel line nozzle revolve004',
+    'fuel line nozzle2 revolve004',
+    'fuel line sweep004',
+    'fuel line cube004',
+    'landing leg ',
+    'landing leg  (Mirror #3)',
+    'landing leg  (Mirror #4)',
+    'landing leg  (Mirror #5)',
+    'Extrude001',
+    'Extrude002',
+    'Extrude003',
+    'Extrude004',
+    'Extrude005',
+    'Extrude006',
+    'Extrude007',
+    'Extrude008',
+    
+    
+]
+
+
+
+
+
+flipNormals = [
+]
+
+
+
+def makePart(dstName, srcObjects, flipNormals):
+    dsts = []
+    for src in doc.Objects:
+        if src.Label in objects:
+            print src.Label
+            mesh = doc.addObject("Mesh::Feature","Mesh")
+            shape = src.Shape
+            #mesh.Mesh = MeshPart.meshFromShape(Shape=shape,MaxLength=250.8)
+            mesh.Mesh = MeshPart.meshFromShape(Shape=shape,LinearDeflection=10, AngularDeflection=0.523599, Relative=False)
+
+            if src.Label in flipNormals:
+                mesh.Mesh.flipNormals()
+            mesh.Label = "%s Mesh" % src.Label
+            mesh.ViewObject.CreaseAngle=25.0
+            dsts.append(mesh)
+            src.ViewObject.Visibility=False
+        
+
+    part = App.activeDocument().addObject('App::Part','Part')
+    part.Label = dstName
+    for i in dsts:
+        part.addObject(i)
+    return part
+
+
+
+makePart("BFS", objects, flipNormals)
+
+
+
+
+
+
+

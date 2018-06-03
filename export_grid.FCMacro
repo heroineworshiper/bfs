@@ -1,0 +1,123 @@
+# convert the grid model to 3 meshes
+# apply to grid.fcstd
+
+import FreeCAD
+import Mesh
+import MeshPart
+
+
+gridNames = [
+    "Loft", 
+    "Loft001",
+    "Loft002",
+    "Loft003",
+    "Loft004",
+    "Loft005",
+    "Loft006",
+    "Loft007",
+    "Loft008",
+    "Loft009",
+    "Loft010",
+    "Loft011",
+    "Loft012",
+    "Loft013",
+    "Loft014",
+    "Loft015",
+    "Loft016",
+    "Loft017",
+    "Loft018",
+    "Loft019",
+    "Loft020",
+    "Loft021",
+    "Loft022",
+    "Loft023",
+    "Loft024",
+    "Loft025",
+    "Loft026",
+    "Loft027",
+    "Loft028",
+    "Loft029",
+    "Loft032",
+    "DWire088",
+    "DWire089",
+    "DWire126",
+    "Part__Mirroring",
+    "Part__Mirroring002",
+    "Part__Mirroring001",
+    "Part__Mirroring003",
+    "Loft031",
+    "Loft030",
+    "Loft033",
+    "Cylinder",
+    "DWire128",
+    "DWire129",
+    "Cut"
+]
+
+flipNormals = [
+    "Loft", 
+    "Loft001",
+    "Loft002",
+    "Loft003",
+    "Loft004",
+    "Loft005",
+    "Loft006",
+    "Loft007",
+    "Loft008",
+    "Loft009",
+    "Loft010",
+    "Loft011",
+    "Loft012",
+    "Loft013",
+    "Loft014",
+    "Loft015",
+    "Loft016",
+    "Loft017",
+    "Loft018",
+    "Loft019",
+    "Loft020",
+    "Loft021",
+    "Loft022",
+    "Loft029",
+    "Loft032"
+]
+
+
+pistonNames = [
+    "Sweep001",
+    "Cylinder001"
+]
+
+shaftNames = [
+    "Cut001"
+]
+
+doc = App.activeDocument()
+guiDoc = Gui.activeDocument()
+
+def makePart(dstName, srcObjects, flipNormals):
+    dsts = []
+    for i in srcObjects:
+        mesh = doc.addObject("Mesh::Feature","Mesh")
+        src = doc.getObject(i)
+        shape = src.Shape
+        #mesh.Mesh = MeshPart.meshFromShape(Shape=shape,MaxLength=250.8)
+        mesh.Mesh = MeshPart.meshFromShape(Shape=shape,LinearDeflection=10, AngularDeflection=0.523599, Relative=False)
+
+        if i in flipNormals:
+            mesh.Mesh.flipNormals()
+        mesh.Label = "%s Mesh" % i
+        mesh.ViewObject.CreaseAngle=25.0
+        dsts.append(mesh)
+        guiDoc.getObject(i).Visibility=False
+
+    part = App.activeDocument().addObject('App::Part','Part')
+    part.Label = dstName
+    for i in dsts:
+        part.addObject(i)
+    return part
+
+makePart("Grid Fin", gridNames, flipNormals)
+makePart("Grid piston", pistonNames, flipNormals)
+makePart("Grid shaft", shaftNames, flipNormals)
+

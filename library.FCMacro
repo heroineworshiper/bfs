@@ -1,0 +1,15 @@
+# library functions
+
+
+import FreeCAD
+
+
+def labelToPart(label):
+    for obj in FreeCAD.ActiveDocument.Objects:
+        if obj.Label.
+
+
+
+
+
+

@@ -1,0 +1,82 @@
+# position & size the engines for the booster
+
+
+
+import FreeCAD
+import Draft
+import math
+
+TOTAL = 31
+
+def toRad(angle):
+    return angle * math.pi * 2.0 / 360.0
+
+def polarToXYZ(angle, radius, z):
+    x = radius * math.cos(angle)
+    y = -radius * math.sin(angle)
+    return Draft.Vector(x, y, z)
+
+
+# radius of each layer
+layerRadius = [
+    4000.0,
+    3100.0,
+    1400.0,
+    0.0
+]
+
+# Z of each layer
+layerZ = [
+    -1500.0,
+    -1700.0,
+    -1900.0,
+    -2100.0
+]
+
+# starting angle of each layer
+layerAngle = [
+    toRad(0.0),
+    toRad(17.0),
+    toRad(0.0),
+    toRad(0.0)
+]
+
+# engines in each layer
+layerTotal = [
+    12,
+    12,
+    6,
+    1
+]
+
+# engine in the current layer
+currentEngine = 0
+currentLayer = 0
+
+for obj in FreeCAD.ActiveDocument.Objects:
+    if obj.Label.startswith('raptor') and obj.Name.startswith('Part'):
+        # calculate its angle
+        angle = 0.0
+        if layerTotal[currentLayer] > 1:
+            angle = layerAngle[currentLayer] + \
+                toRad(float(currentEngine) * 360.0 / (layerTotal[currentLayer] - 1))
+        # polar to XY
+        xyz = polarToXYZ(angle, layerRadius[currentLayer], layerZ[currentLayer])
+        
+        
+        obj.Placement = App.Placement(
+            xyz, 
+            App.Rotation(App.Vector(0,0,1), -angle * 360.0 / 2.0 / math.pi))
+        
+        currentEngine = currentEngine + 1
+        if currentEngine >= layerTotal[currentLayer]:
+            currentLayer = currentLayer + 1
+            currentEngine = 0
+
+
+
+
+
+
+
+

@@ -1,0 +1,68 @@
+import FreeCAD
+import Mesh
+import MeshPart
+
+
+
+
+
+import library
+reload(library)
+
+
+
+doc = FreeCAD.ActiveDocument
+guiDoc = Gui.activeDocument()
+
+objects = [
+    "Revolve",
+    "Fillet",
+    "Torus",
+    "Torus001",
+    "Torus002",
+    "Sweep",
+    "Torus003",
+    "Torus004",
+    "Torus005",
+    "Revolve002",
+    "Revolve003",
+    "Sweep001"
+]
+
+
+def makePart(dstName, srcObjects):
+    dsts = []
+    for i in srcObjects:
+        mesh = doc.addObject("Mesh::Feature","Mesh")
+        src = doc.getObject(i)
+        shape = src.Shape
+        #mesh.Mesh = MeshPart.meshFromShape(Shape=shape,MaxLength=250.8)
+        mesh.Mesh = MeshPart.meshFromShape(Shape=shape,LinearDeflection=10, AngularDeflection=0.523599, Relative=False)
+
+        mesh.Label = "%s Mesh" % i
+        mesh.ViewObject.CreaseAngle=25.0
+        mesh.ViewObject.Lighting=u"Two side"
+
+        dsts.append(mesh)
+        # hide the source object
+        guiDoc.getObject(i).Visibility = False
+
+    part = App.activeDocument().addObject('App::Part','Part')
+    part.Label = dstName
+    for i in dsts:
+        part.addObject(i)
+    return part
+
+
+makePart("raptor", objects)
+
+
+
+
+
+
+
+
+
+
+

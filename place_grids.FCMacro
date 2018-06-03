@@ -1,0 +1,42 @@
+import FreeCAD
+
+
+
+coords = [
+    App.Vector(0.0, 0.0, 57000.0),
+    App.Vector(0.0, 0.0, 57000.0),
+    App.Vector(0.0, 0.0, 57000.0),
+    App.Vector(0.0, 0.0, 57000.0)
+]
+
+rotations = [
+    45,
+    135,
+    -45,
+    -135
+]
+
+doc = FreeCAD.ActiveDocument
+shaftNumber = 0
+pistonNumber = 0
+gridNumber = 0
+for obj in doc.Objects:
+    if obj.Label.startswith('Grid shaft') and obj.Name.startswith('Part'):
+        obj.Placement = App.Placement(coords[shaftNumber],App.Rotation(App.Vector(0,0,1),rotations[shaftNumber]))
+        shaftNumber = shaftNumber + 1
+    if obj.Label.startswith('Grid piston') and obj.Name.startswith('Part'):
+        obj.Placement = App.Placement(coords[pistonNumber],App.Rotation(App.Vector(0,0,1),rotations[pistonNumber]))
+        pistonNumber = pistonNumber + 1
+    if obj.Label.startswith('Grid Fin') and obj.Name.startswith('Part'):
+        obj.Placement = App.Placement(coords[gridNumber],App.Rotation(App.Vector(0,0,1),rotations[gridNumber]))
+        gridNumber = gridNumber + 1
+
+
+
+
+
+
+
+
+
+

@@ -1,1 +1,21 @@
+Big Fuckin Simulator
 The most ridiculous game we can think of.
+
+
+
+Paste engines from raptor.fcstd into bfs.fcstd, 2 sea levels & 4 vacuums.
+Place BFS engines by running bfs_engines.FCMacro 
+
+
+Synthesize a grid fin by running grid.FCMacro
+Copy parts from grid_parts.fcstd into the grid.
+Tesselate by running export_grid.FCMacro
+Paste grids into booster.fcstd
+Place grids using place_grids.FCMacro
+
+
+
+Create sea level raptor mesh in raptor.fcstd with export_raptor.FCMacro
+Paste 31 sea level engines from raptor.fcstd into booster.fcstd
+Place booster engines by running booster_engines.FCMacro 
+
