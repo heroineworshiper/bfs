@@ -1,9 +1,29 @@
+
+# Freecad mesh exporter
+# Copyright (C) 2018 Adam Williams <broadcast at earthling dot net>
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+
+
 import FreeCAD
 import Mesh
 import MeshPart
 
 
-
+# export everything except what moves
 
 
 doc = FreeCAD.ActiveDocument
@@ -11,8 +31,9 @@ guiDoc = Gui.activeDocument()
 
 
 
+
+
 objects = [
-    
     'wing',
     'Loft',
     'fuse revolve',
@@ -20,67 +41,87 @@ objects = [
     'landing fairing revolve (Mirror #3)',
     'landing fairing revolve',
     'tank',
-    #'raptor',
-    #'raptor001',
-    #'raptor002',
-    #'raptor003',
-    #'raptor004',
-    #'raptor005',
-    'fuel line nozzle revolve',
-    'fuel line sweep',
-    'fuel line cube',
-    'fuel line nozzle revolve002',
-    'fuel line sweep002',
-    'fuel line cube002',
-    'fuel line nozzle revolve003',
-    'fuel line nozzle2 revolve003',
-    'fuel line sweep003',
-    'fuel line cube003',
-    'fuel line nozzle revolve004',
-    'fuel line nozzle2 revolve004',
-    'fuel line sweep004',
-    'fuel line cube004',
+    'tank2',
+    'fuel line',
+    'fuel line002',
+    'fuel line003',
+    'fuel line004',
+    'mount',
+    'mount001',
+    'mount002',
+    'mount003',
+    
+]
+
+objects2 = [
     'landing leg ',
     'landing leg  (Mirror #3)',
     'landing leg  (Mirror #4)',
     'landing leg  (Mirror #5)',
-    'Extrude001',
-    'Extrude002',
-    'Extrude003',
-    'Extrude004',
-    'Extrude005',
-    'Extrude006',
-    'Extrude007',
-    'Extrude008',
-    
-    
 ]
 
 
 
-
+doubleSided = [
+    'wing',
+    'Loft'
+]
 
 flipNormals = [
+    'tank2',
 ]
 
+def isPart(x):
+    return str(type(x)) == '<type \'App.Part\'>'
+
+# convert an App.Part to a mesh
+def makePartPart(dsts, transform, part):
+    transform = transform * part.Placement.toMatrix()
+    for src in part.Group:
+        if src.ViewObject.Visibility:
+            if isPart(src):
+                makePartPart(dsts, transform, src)
+            else:
+                makePolyPart(dsts, transform, src)
+    #src.ViewObject.Visibility=False
 
 
-def makePart(dstName, srcObjects, flipNormals):
+
+# convert a polygon to a mesh
+def makePolyPart(dsts, transform, src):
+    #print "got it"
+    mesh = doc.addObject("Mesh::Feature","Mesh")
+    shape = src.Shape
+    #mesh.Mesh = MeshPart.meshFromShape(Shape=shape,MaxLength=250.8)
+    mesh.Mesh = MeshPart.meshFromShape(Shape=shape,LinearDeflection=10, AngularDeflection=0.523599, Relative=False)
+
+    if src.Label in flipNormals:
+        mesh.Mesh.flipNormals()
+    if src.Label in doubleSided:
+        mesh.ViewObject.Lighting = u"Two side"
+        
+    mesh.Label = "%s Mesh" % src.Label
+    mesh.ViewObject.CreaseAngle=25.0
+    mesh.Placement = App.Placement(transform)
+    dsts.append(mesh)
+    src.ViewObject.Visibility=False
+
+
+
+
+
+def makePart(dstName, objects):
     dsts = []
     for src in doc.Objects:
         if src.Label in objects:
-            print src.Label
-            mesh = doc.addObject("Mesh::Feature","Mesh")
-            shape = src.Shape
-            #mesh.Mesh = MeshPart.meshFromShape(Shape=shape,MaxLength=250.8)
-            mesh.Mesh = MeshPart.meshFromShape(Shape=shape,LinearDeflection=10, AngularDeflection=0.523599, Relative=False)
-
-            if src.Label in flipNormals:
-                mesh.Mesh.flipNormals()
-            mesh.Label = "%s Mesh" % src.Label
-            mesh.ViewObject.CreaseAngle=25.0
-            dsts.append(mesh)
-            src.ViewObject.Visibility=False
+            transform = App.Matrix()
+            print 'label=%s name=%s' % (src.Label, src.Name)
+            if isPart(src):
+                makePartPart(dsts, transform, src)
+            else:
+                makePolyPart(dsts, transform, src)
+                
+                
         
 
     part = App.activeDocument().addObject('App::Part','Part')
@@ -91,7 +132,8 @@ def makePart(dstName, srcObjects, flipNormals):
 
 
 
-makePart("BFS", objects, flipNormals)
+makePart("BFS", objects)
+makePart("Landing legs", objects2)
 
 
 

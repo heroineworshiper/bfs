@@ -1,0 +1,146 @@
+# convert the booster into meshes
+# the user can then select all the meshes, merge, & export
+
+
+import FreeCAD
+import Mesh
+import MeshPart
+
+
+
+doc = FreeCAD.ActiveDocument
+guiDoc = Gui.activeDocument()
+
+
+objects = [
+    "Revolve",
+    "Revolve001",
+    "Revolve002",
+]
+
+
+doubleSided = [
+]
+
+
+flipNormals = [
+    "Revolve001",
+]
+
+def isPart(x):
+    return str(type(x)) == '<type \'App.Part\'>'
+
+# convert an App.Part to a mesh
+def makePartPart(dsts, transform, part):
+    transform = transform * part.Placement.toMatrix()
+    for src in part.Group:
+        if src.ViewObject.Visibility:
+            if isPart(src):
+                makePartPart(dsts, transform, src)
+            else:
+                makePolyPart(dsts, transform, src)
+    #src.ViewObject.Visibility=False
+
+
+
+# convert a polygon to a mesh
+def makePolyPart(dsts, transform, src):
+    #print "got it"
+    mesh = doc.addObject("Mesh::Feature","Mesh")
+    shape = src.Shape
+    #mesh.Mesh = MeshPart.meshFromShape(Shape=shape,MaxLength=250.8)
+    mesh.Mesh = MeshPart.meshFromShape(Shape=shape,LinearDeflection=100.0, AngularDeflection=0.523599, Relative=False)
+
+    if src.Label in flipNormals:
+        mesh.Mesh.flipNormals()
+    if src.Label in doubleSided:
+        mesh.ViewObject.Lighting = u"Two side"
+        
+    mesh.Label = "%s Mesh" % src.Label
+    mesh.ViewObject.CreaseAngle=25.0
+    mesh.Placement = App.Placement(transform)
+    dsts.append(mesh)
+    src.ViewObject.Visibility=False
+
+
+
+
+
+def makePart(dstName):
+    dsts = []
+    for src in doc.Objects:
+        if src.Label in objects:
+            transform = App.Matrix()
+            print 'label=%s name=%s' % (src.Label, src.Name)
+            if isPart(src):
+                makePartPart(dsts, transform, src)
+            else:
+                makePolyPart(dsts, transform, src)
+                
+                
+        
+
+    part = App.activeDocument().addObject('App::Part','Part')
+    part.Label = dstName
+    for i in dsts:
+        part.addObject(i)
+    return part
+
+
+
+meshes = [
+    "rear fin mesh",
+    "rear fin mesh001",
+    "rear fin mesh002",
+    "rear fin mesh003",
+    "raptor001",
+    "raptor002",
+    "raptor003",
+    "raptor004",
+    "raptor005",
+    "raptor006",
+    "raptor007",
+    "raptor008",
+    "raptor009",
+    "raptor010",
+    "raptor011",
+    "raptor012",
+    "raptor013",
+    "raptor014",
+    "raptor015",
+    "raptor016",
+    "raptor017",
+    "raptor018",
+    "raptor019",
+    "raptor020",
+    "raptor021",
+    "raptor022",
+    "raptor023",
+    "raptor024",
+]
+
+
+def addPart(dst, transform, part):
+    transform = transform * part.Placement.toMatrix()
+    for src in part.Group:
+        if src.ViewObject.Visibility:
+            if isPart(src):
+                addPart(dst, transform, src)
+            else:
+                src.Placement = App.Placement(transform * src.Placement.toMatrix())
+                dst.addObject(src)
+
+
+result = makePart("booster")
+for src in doc.Objects:
+    if src.Label in meshes:
+        if isPart(src):
+            # descend into a part & export only the meshes
+            transform = App.Matrix()
+            addPart(result, transform, src)
+        else:
+            result.addObject(src)
+
+
+
+

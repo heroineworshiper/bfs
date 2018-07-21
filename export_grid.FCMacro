@@ -1,5 +1,6 @@
 # convert the grid model to 3 meshes
 # apply to grid.fcstd
+# the user can then select all the meshes, merge, & export
 
 import FreeCAD
 import Mesh

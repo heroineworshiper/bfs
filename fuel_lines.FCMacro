@@ -23,7 +23,7 @@ angles = [
 
 current_coord = 0
 for obj in FreeCAD.ActiveDocument.Objects:
-    #print 'label=', obj.Label, ' name=', obj.Name
+    print 'label=', obj.Label, ' name=', obj.Name
     if obj.Label.startswith('fuel line') and obj.Name.startswith('Part'):
         #print obj.Group
         for obj2 in obj.Group:
