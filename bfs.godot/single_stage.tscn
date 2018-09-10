@@ -1,0 +1,212 @@
+[gd_scene load_steps=9 format=2]
+
+[ext_resource path="res://single_stage.gd" type="Script" id=1]
+[ext_resource path="res://booster.tscn" type="PackedScene" id=2]
+[ext_resource path="res://raptor2.tscn" type="PackedScene" id=3]
+[ext_resource path="res://grid.tscn" type="PackedScene" id=4]
+[ext_resource path="res://bfs.tscn" type="PackedScene" id=5]
+[ext_resource path="res://assets/engine_start.wav" type="AudioStream" id=6]
+[ext_resource path="res://assets/engine_cutoff2.wav" type="AudioStream" id=7]
+
+[sub_resource type="BoxShape" id=1]
+
+extents = Vector3( 4.5, 54, 4.5 )
+
+[node name="BFR" type="Node" index="0"]
+script = ExtResource( 1 )
+
+[node name="rigid" type="RigidBody" parent="." index="0"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 50.446, 0 )
+input_ray_pickable = true
+input_capture_on_drag = false
+collision_layer = 1
+collision_mask = 1
+mode = 0
+mass = 1.0
+friction = 1.0
+bounce = 0.5
+gravity_scale = 1.0
+custom_integrator = false
+continuous_cd = false
+contacts_reported = 0
+contact_monitor = false
+sleeping = false
+can_sleep = true
+axis_lock_linear_x = false
+axis_lock_linear_y = false
+axis_lock_linear_z = false
+axis_lock_angular_x = false
+axis_lock_angular_y = false
+axis_lock_angular_z = false
+linear_velocity = Vector3( 0, 0, 0 )
+linear_damp = -1.0
+angular_velocity = Vector3( 0, 0, 0 )
+angular_damp = 0.99
+_sections_unfolded = [ "Angular", "Axis Lock", "Collision", "Linear", "Transform" ]
+
+[node name="CollisionShape" type="CollisionShape" parent="rigid" index="0"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -3e-06, 3.42191, 0 )
+shape = SubResource( 1 )
+disabled = false
+_sections_unfolded = [ "Transform", "Visibility" ]
+
+[node name="rigid_cg" type="Spatial" parent="rigid" index="1"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -19.4142, 0 )
+
+[node name="booster" parent="rigid/rigid_cg" index="0" instance=ExtResource( 2 )]
+transform = Transform( -1, -8.74228e-08, 0, 8.74228e-08, -1, 0, 0, 0, 1, 0, 0, 0 )
+
+[node name="booster raptor0" parent="rigid/rigid_cg" index="1" instance=ExtResource( 3 )]
+state = null
+
+[node name="booster raptor1" parent="rigid/rigid_cg" index="2" instance=ExtResource( 3 )]
+state = null
+
+[node name="booster raptor2" parent="rigid/rigid_cg" index="3" instance=ExtResource( 3 )]
+state = null
+
+[node name="booster raptor3" parent="rigid/rigid_cg" index="4" instance=ExtResource( 3 )]
+state = null
+
+[node name="booster raptor4" parent="rigid/rigid_cg" index="5" instance=ExtResource( 3 )]
+state = null
+
+[node name="booster raptor5" parent="rigid/rigid_cg" index="6" instance=ExtResource( 3 )]
+state = null
+
+[node name="booster raptor6" parent="rigid/rigid_cg" index="7" instance=ExtResource( 3 )]
+state = null
+
+[node name="booster raptor7" parent="rigid/rigid_cg" index="8" instance=ExtResource( 3 )]
+state = null
+
+[node name="booster raptor8" parent="rigid/rigid_cg" index="9" instance=ExtResource( 3 )]
+state = null
+
+[node name="booster raptor9" parent="rigid/rigid_cg" index="10" instance=ExtResource( 3 )]
+state = null
+
+[node name="booster raptor10" parent="rigid/rigid_cg" index="11" instance=ExtResource( 3 )]
+state = null
+
+[node name="booster raptor11" parent="rigid/rigid_cg" index="12" instance=ExtResource( 3 )]
+state = null
+
+[node name="booster raptor12" parent="rigid/rigid_cg" index="13" instance=ExtResource( 3 )]
+state = null
+
+[node name="booster raptor13" parent="rigid/rigid_cg" index="14" instance=ExtResource( 3 )]
+state = null
+
+[node name="booster raptor14" parent="rigid/rigid_cg" index="15" instance=ExtResource( 3 )]
+state = null
+
+[node name="booster raptor15" parent="rigid/rigid_cg" index="16" instance=ExtResource( 3 )]
+state = null
+
+[node name="booster raptor16" parent="rigid/rigid_cg" index="17" instance=ExtResource( 3 )]
+state = null
+
+[node name="booster raptor17" parent="rigid/rigid_cg" index="18" instance=ExtResource( 3 )]
+state = null
+
+[node name="booster raptor18" parent="rigid/rigid_cg" index="19" instance=ExtResource( 3 )]
+state = null
+
+[node name="booster raptor19" parent="rigid/rigid_cg" index="20" instance=ExtResource( 3 )]
+state = null
+
+[node name="booster raptor20" parent="rigid/rigid_cg" index="21" instance=ExtResource( 3 )]
+state = null
+
+[node name="booster raptor21" parent="rigid/rigid_cg" index="22" instance=ExtResource( 3 )]
+state = null
+
+[node name="booster raptor22" parent="rigid/rigid_cg" index="23" instance=ExtResource( 3 )]
+state = null
+
+[node name="booster raptor23" parent="rigid/rigid_cg" index="24" instance=ExtResource( 3 )]
+state = null
+
+[node name="booster raptor24" parent="rigid/rigid_cg" index="25" instance=ExtResource( 3 )]
+state = null
+
+[node name="booster raptor25" parent="rigid/rigid_cg" index="26" instance=ExtResource( 3 )]
+state = null
+
+[node name="booster raptor26" parent="rigid/rigid_cg" index="27" instance=ExtResource( 3 )]
+state = null
+
+[node name="booster raptor27" parent="rigid/rigid_cg" index="28" instance=ExtResource( 3 )]
+state = null
+
+[node name="booster raptor28" parent="rigid/rigid_cg" index="29" instance=ExtResource( 3 )]
+state = null
+
+[node name="booster raptor29" parent="rigid/rigid_cg" index="30" instance=ExtResource( 3 )]
+state = null
+
+[node name="booster raptor30" parent="rigid/rigid_cg" index="31" instance=ExtResource( 3 )]
+transform = Transform( 1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, -0.758062, -0.280415, -0.230034 )
+state = null
+
+[node name="grid0" parent="rigid/rigid_cg" index="32" instance=ExtResource( 4 )]
+transform = Transform( 0.707107, -0.707107, -3.09086e-08, 0, -4.37114e-08, 1, -0.707107, -0.707107, -3.09086e-08, 0, 28, 0 )
+
+[node name="grid1" parent="rigid/rigid_cg" index="33" instance=ExtResource( 4 )]
+transform = Transform( -0.707107, 0.707107, 3.09086e-08, 0, -4.37114e-08, 1, 0.707107, 0.707107, 3.09086e-08, 0, 28, 0 )
+
+[node name="grid2" parent="rigid/rigid_cg" index="34" instance=ExtResource( 4 )]
+transform = Transform( 0.707107, 0.707107, 3.09086e-08, 0, -4.37114e-08, 1, 0.707107, -0.707107, -3.09086e-08, 0, 28, 0 )
+
+[node name="grid3" parent="rigid/rigid_cg" index="35" instance=ExtResource( 4 )]
+transform = Transform( -0.766044, -0.642788, -2.80971e-08, 0, -4.37114e-08, 1, -0.642788, 0.766044, 3.34849e-08, 0, 28, 0 )
+
+[node name="ship" parent="rigid/rigid_cg" index="36" instance=ExtResource( 5 )]
+transform = Transform( 1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 29, 0 )
+
+[node name="DirectionalLight" type="DirectionalLight" parent="." index="1"]
+transform = Transform( 1, 0, 0, 0, 0.999651, -0.0264267, 0, 0.0264267, 0.999651, 0, -1.51442, 8.75369 )
+visible = false
+layers = 1
+light_color = Color( 1, 1, 1, 1 )
+light_energy = 1.0
+light_indirect_energy = 1.0
+light_negative = false
+light_specular = 0.5
+light_bake_mode = 1
+light_cull_mask = -1
+shadow_enabled = false
+shadow_color = Color( 0, 0, 0, 1 )
+shadow_bias = 0.1
+shadow_contact = 0.0
+shadow_reverse_cull_face = false
+editor_only = false
+directional_shadow_mode = 2
+directional_shadow_split_1 = 0.1
+directional_shadow_split_2 = 0.2
+directional_shadow_split_3 = 0.5
+directional_shadow_blend_splits = false
+directional_shadow_normal_bias = 0.8
+directional_shadow_bias_split_scale = 0.25
+directional_shadow_depth_range = 0
+directional_shadow_max_distance = 200.0
+
+[node name="audio1" type="AudioStreamPlayer" parent="." index="2"]
+stream = ExtResource( 6 )
+volume_db = 0.0
+pitch_scale = 1.0
+autoplay = false
+mix_target = 0
+bus = "Master"
+_sections_unfolded = [ "Pause" ]
+
+[node name="engineCutoff" type="AudioStreamPlayer" parent="." index="3"]
+stream = ExtResource( 7 )
+volume_db = -6.0
+pitch_scale = 1.0
+autoplay = false
+mix_target = 0
+bus = "Master"
+_sections_unfolded = [ "Pause" ]
+

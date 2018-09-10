@@ -3,9 +3,9 @@
         {
             "bufferView" : 0,
             "componentType" : 5123,
-            "count" : 5520,
+            "count" : 15504,
             "max" : [
-                1043
+                2751
             ],
             "min" : [
                 0
@@ -15,67 +15,23 @@
         {
             "bufferView" : 1,
             "componentType" : 5126,
-            "count" : 1044,
+            "count" : 2752,
             "max" : [
-                4.605779647827148,
-                3.0079257488250732,
-                4.605779647827148
+                1.5348198413848877,
+                1.0000001192092896,
+                1.5348198413848877
             ],
             "min" : [
-                -4.605779647827148,
-                -3.3342790603637695,
-                -4.605779647827148
+                -1.5348198413848877,
+                -1.0,
+                -1.5348198413848877
             ],
             "type" : "VEC3"
         },
         {
             "bufferView" : 2,
             "componentType" : 5126,
-            "count" : 1044,
-            "max" : [
-                0.9986622929573059,
-                0.395947128534317,
-                0.9986621737480164
-            ],
-            "min" : [
-                -0.9986622929573059,
-                -0.999969482421875,
-                -0.9986622333526611
-            ],
-            "type" : "VEC3"
-        },
-        {
-            "bufferView" : 3,
-            "componentType" : 5123,
-            "count" : 9984,
-            "max" : [
-                1727
-            ],
-            "min" : [
-                0
-            ],
-            "type" : "SCALAR"
-        },
-        {
-            "bufferView" : 4,
-            "componentType" : 5126,
-            "count" : 1728,
-            "max" : [
-                1.0,
-                1.0000001192092896,
-                1.0000001192092896
-            ],
-            "min" : [
-                -1.0000001192092896,
-                -1.0,
-                -1.0
-            ],
-            "type" : "VEC3"
-        },
-        {
-            "bufferView" : 5,
-            "componentType" : 5126,
-            "count" : 1728,
+            "count" : 2752,
             "max" : [
                 1.0,
                 0.999969482421875,
@@ -96,50 +52,32 @@
     "bufferViews" : [
         {
             "buffer" : 0,
-            "byteLength" : 11040,
+            "byteLength" : 31008,
             "byteOffset" : 0,
             "target" : 34963
         },
         {
             "buffer" : 0,
-            "byteLength" : 12528,
-            "byteOffset" : 11040,
+            "byteLength" : 33024,
+            "byteOffset" : 31008,
             "target" : 34962
         },
         {
             "buffer" : 0,
-            "byteLength" : 12528,
-            "byteOffset" : 23568,
-            "target" : 34962
-        },
-        {
-            "buffer" : 0,
-            "byteLength" : 19968,
-            "byteOffset" : 36096,
-            "target" : 34963
-        },
-        {
-            "buffer" : 0,
-            "byteLength" : 20736,
-            "byteOffset" : 56064,
-            "target" : 34962
-        },
-        {
-            "buffer" : 0,
-            "byteLength" : 20736,
-            "byteOffset" : 76800,
+            "byteLength" : 33024,
+            "byteOffset" : 64032,
             "target" : 34962
         }
     ],
     "buffers" : [
         {
-            "byteLength" : 97536,
+            "byteLength" : 97056,
             "uri" : "booster.bin"
         }
     ],
     "meshes" : [
         {
-            "name" : "Cube",
+            "name" : "CUSurface.001",
             "primitives" : [
                 {
                     "attributes" : {
@@ -149,23 +87,11 @@
                     "indices" : 0
                 }
             ]
-        },
-        {
-            "name" : "CUSurface.001",
-            "primitives" : [
-                {
-                    "attributes" : {
-                        "NORMAL" : 5,
-                        "POSITION" : 4
-                    },
-                    "indices" : 3
-                }
-            ]
         }
     ],
     "nodes" : [
         {
-            "mesh" : 1,
+            "mesh" : 0,
             "name" : "booster",
             "scale" : [
                 4.5,
@@ -177,20 +103,6 @@
                 -29.0,
                 -0.0
             ]
-        },
-        {
-            "mesh" : 0,
-            "name" : "fins",
-            "scale" : [
-                -1.4995660781860352,
-                -1.4995660781860352,
-                -1.4995660781860352
-            ],
-            "translation" : [
-                0.0,
-                -5.0,
-                2.3283064365386963e-10
-            ]
         }
     ],
     "scene" : 0,
@@ -198,8 +110,7 @@
         {
             "name" : "Scene",
             "nodes" : [
-                0,
-                1
+                0
             ]
         }
     ]

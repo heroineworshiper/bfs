@@ -1,5 +1,16 @@
-Big Fuckin Simulator
+Big F'n Simulator
+
 The most ridiculous game we can think of.
+It'll consume all your nights & weekends, just like working at SpaceX.
+Blocked by Tory Bruno.
+
+
+
+
+
+raptor_flame2.blend - the most recent version of the raptor
+booster.blend - the most recent booster
+bfs.blend - the most recent ship
 
 
 
@@ -18,4 +29,35 @@ Place grids using place_grids.FCMacro
 Create sea level raptor mesh in raptor.fcstd with export_raptor.FCMacro
 Paste 31 sea level engines from raptor.fcstd into booster.fcstd
 Place booster engines by running booster_engines.FCMacro 
+
+
+
+
+launchpad.blend - the launchpad
+Export by selecting ground, launchpad, tower
+GLTF options: apply modifiers, selected only
+
+
+
+
+
+
+
+wishlist:
+flat spins using gridfins
+drift using gridfins
+RUD instead of WRECK
+
+maps:
+Elon's commute
+
+
+
+
+knockdown
+landing race
+liftoff race
+mars race
+infected
+
 

@@ -1,0 +1,71 @@
+[gd_scene load_steps=6 format=2]
+
+[ext_resource path="res://assets/raptor.gltf" type="PackedScene" id=1]
+[ext_resource path="res://raptor2.gd" type="Script" id=2]
+[ext_resource path="res://assets/flame.tres" type="Material" id=3]
+[ext_resource path="res://assets/doublesidedmetal.tres" type="Material" id=4]
+[ext_resource path="res://assets/singlesidedmetal.tres" type="Material" id=5]
+
+[node name="Scene Root" index="0" instance=ExtResource( 1 )]
+transform = Transform( -1, 8.74228e-08, 0, -8.74228e-08, -1, 0, 0, 0, 1, 0, 0, 0 )
+script = ExtResource( 2 )
+_sections_unfolded = [ "Transform" ]
+state = 0
+defaultTransform = null
+angle = 0.0
+
+[node name="flame" parent="." index="0"]
+transform = Transform( 1.59974, 0, 0, 0, 14.2088, 0, 0, 0, 1.6, 0, 1.59, 0 )
+visible = false
+material/0 = ExtResource( 3 )
+_sections_unfolded = [ "Transform", "Visibility", "material" ]
+
+[node name="cones" parent="." index="1"]
+visible = false
+_sections_unfolded = [ "material" ]
+
+[node name="vacuumNozzle" parent="." index="2"]
+visible = false
+material/0 = ExtResource( 4 )
+_sections_unfolded = [ "material" ]
+
+[node name="singleSidedEngine" parent="." index="3"]
+material/0 = ExtResource( 5 )
+_sections_unfolded = [ "material" ]
+
+[node name="doubleSidedEngine" parent="." index="4"]
+material/0 = ExtResource( 4 )
+_sections_unfolded = [ "material" ]
+
+[node name="seaNozzle" parent="." index="5"]
+material/0 = ExtResource( 4 )
+_sections_unfolded = [ "material" ]
+
+[node name="SpotLight" type="DirectionalLight" parent="." index="6"]
+transform = Transform( 0.0162974, 0, -0.999867, 0, 1, 0, 0.999867, 0, 0.0162974, -9.89333, 0, 0 )
+visible = false
+layers = 1
+light_color = Color( 1, 1, 1, 1 )
+light_energy = 1.0
+light_indirect_energy = 1.0
+light_negative = false
+light_specular = 0.5
+light_bake_mode = 1
+light_cull_mask = -1
+shadow_enabled = false
+shadow_color = Color( 0, 0, 0, 1 )
+shadow_bias = 0.1
+shadow_contact = 0.0
+shadow_reverse_cull_face = false
+editor_only = false
+directional_shadow_mode = 2
+directional_shadow_split_1 = 0.1
+directional_shadow_split_2 = 0.2
+directional_shadow_split_3 = 0.5
+directional_shadow_blend_splits = false
+directional_shadow_normal_bias = 0.8
+directional_shadow_bias_split_scale = 0.25
+directional_shadow_depth_range = 0
+directional_shadow_max_distance = 200.0
+_sections_unfolded = [ "Light", "Spot" ]
+

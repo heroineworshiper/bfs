@@ -1,0 +1,235 @@
+[gd_scene load_steps=9 format=2]
+
+[ext_resource path="res://mane.gd" type="Script" id=1]
+[ext_resource path="res://single_stage.tscn" type="PackedScene" id=2]
+[ext_resource path="res://playerCam.gd" type="Script" id=3]
+[ext_resource path="res://assets/huge_revolution1.wav" type="AudioStream" id=4]
+[ext_resource path="res://assets/music1.ogg" type="AudioStream" id=5]
+[ext_resource path="res://launchpad.tscn" type="PackedScene" id=6]
+
+[sub_resource type="PlaneShape" id=1]
+
+plane = Plane( 0, 1, 0, 0 )
+
+[sub_resource type="PlaneShape" id=2]
+
+plane = Plane( 0, 1, 0, 0 )
+
+[node name="Node" type="Node" index="0"]
+script = ExtResource( 1 )
+
+[node name="DirectionalLight" type="DirectionalLight" parent="." index="0"]
+transform = Transform( 0.763548, 6.14491e-08, -0.645751, 0.243924, -3.81826, 0.28842, 0.59791, 1.5577, 0.706979, 0, 169.749, 113.427 )
+layers = 1
+light_color = Color( 1, 1, 1, 1 )
+light_energy = 1.0
+light_indirect_energy = 1.0
+light_negative = false
+light_specular = 1.0
+light_bake_mode = 1
+light_cull_mask = -1
+shadow_enabled = false
+shadow_color = Color( 0, 0, 0, 1 )
+shadow_bias = 0.1
+shadow_contact = 0.0
+shadow_reverse_cull_face = false
+editor_only = false
+directional_shadow_mode = 2
+directional_shadow_split_1 = 0.1
+directional_shadow_split_2 = 0.2
+directional_shadow_split_3 = 0.5
+directional_shadow_blend_splits = false
+directional_shadow_normal_bias = 0.8
+directional_shadow_bias_split_scale = 0.25
+directional_shadow_depth_range = 0
+directional_shadow_max_distance = 200.0
+_sections_unfolded = [ "Directional Shadow", "Light", "Shadow" ]
+
+[node name="bfr" type="Spatial" parent="." index="1"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 20, 0 )
+_sections_unfolded = [ "Transform" ]
+
+[node name="BFR" parent="bfr" index="0" instance=ExtResource( 2 )]
+
+[node name="Camera" type="Camera" parent="." index="2"]
+transform = Transform( 0.99997, 0.00640871, 0.00441153, 0, 0.567012, -0.823709, -0.0077803, 0.823684, 0.566995, -1.07494, 0, 34.8867 )
+visible = false
+keep_aspect = 1
+cull_mask = 1048575
+environment = null
+h_offset = 0.0
+v_offset = 0.0
+doppler_tracking = 0
+projection = 0
+current = false
+fov = 20.0
+size = 1.0
+near = 0.05
+far = 1000.0
+_sections_unfolded = [ "Transform", "Visibility" ]
+
+[node name="StaticBody" type="StaticBody" parent="." index="3"]
+input_ray_pickable = true
+input_capture_on_drag = false
+collision_layer = 1
+collision_mask = 1
+friction = 1.0
+bounce = 0.0
+constant_linear_velocity = Vector3( 0, 0, 0 )
+constant_angular_velocity = Vector3( 0, 0, 0 )
+_sections_unfolded = [ "Collision", "Transform" ]
+
+[node name="CollisionShape" type="CollisionShape" parent="StaticBody" index="0"]
+shape = SubResource( 1 )
+disabled = false
+
+[node name="grid_cam" type="Camera" parent="." index="4"]
+transform = Transform( 0.999231, -0.0276303, -0.0278219, 0.035375, 0.941316, 0.335665, 0.0169147, -0.336391, 0.941569, -2.51011, 89.4676, 62.7641 )
+keep_aspect = 1
+cull_mask = 1048575
+environment = null
+h_offset = 0.0
+v_offset = 0.0
+doppler_tracking = 0
+projection = 0
+current = false
+fov = 15.0
+size = 1.0
+near = 0.05
+far = 10000.0
+_sections_unfolded = [ "Transform", "Visibility" ]
+
+[node name="engine_cam" type="Camera" parent="." index="5"]
+transform = Transform( 0.999976, -0.00293708, 0.00623535, 0.00689247, 0.426109, -0.904645, 7.35745e-08, 0.904667, 0.426119, -0.00234241, -10.2143, 3.61742 )
+keep_aspect = 1
+cull_mask = 1048575
+environment = null
+h_offset = 0.0
+v_offset = 0.0
+doppler_tracking = 0
+projection = 0
+current = false
+fov = 70.0
+size = 1.0
+near = 0.05
+far = 100.0
+
+[node name="playerCam" type="Camera" parent="." index="6"]
+transform = Transform( 1, 0, 0, 0, 0.959994, -0.280015, 0, 0.280015, 0.959995, 133.637, -42.5651, 306.638 )
+keep_aspect = 1
+cull_mask = 1048575
+environment = null
+h_offset = 0.0
+v_offset = 0.0
+doppler_tracking = 0
+projection = 0
+current = true
+fov = 70.0
+size = 1.0
+near = 0.05
+far = 100000.0
+script = ExtResource( 3 )
+_sections_unfolded = [ "Transform" ]
+
+[node name="elon" type="AudioStreamPlayer3D" parent="." index="7"]
+stream = ExtResource( 4 )
+attenuation_model = 0
+unit_db = 0.0
+unit_size = 1.0
+max_db = 3.0
+pitch_scale = 1.0
+autoplay = false
+max_distance = 0.0
+out_of_range_mode = 0
+bus = "Master"
+area_mask = 1
+emission_angle_enabled = false
+emission_angle_degrees = 45.0
+emission_angle_filter_attenuation_db = -12.0
+attenuation_filter_cutoff_hz = 22050.0
+attenuation_filter_db = 0.0
+doppler_tracking = 0
+_sections_unfolded = [ "Attenuation Filter", "Doppler", "Emission Angle", "Pause" ]
+
+[node name="music" type="AudioStreamPlayer" parent="." index="8"]
+stream = ExtResource( 5 )
+volume_db = 0.0
+pitch_scale = 1.0
+autoplay = false
+mix_target = 0
+bus = "Master"
+
+[node name="launchpad" parent="." index="9" instance=ExtResource( 6 )]
+transform = Transform( 36, 0, 0, 0, 36, 0, 0, 0, 36, 2.97907, 0, 105.024 )
+mode = 1
+_sections_unfolded = [ "Collision", "Transform" ]
+
+[node name="launchpad2" parent="." index="10" instance=ExtResource( 6 )]
+transform = Transform( 36, 0, 0, 0, 36, 0, 0, 0, 36, -121.164, 0, -12.4729 )
+mode = 1
+_sections_unfolded = [ "Transform" ]
+
+[node name="launchpad3" parent="." index="11" instance=ExtResource( 6 )]
+transform = Transform( 36, 0, 0, 0, 36, 0, 0, 0, 36, -253.02, 0, -114.037 )
+mode = 1
+_sections_unfolded = [ "Transform" ]
+
+[node name="launchpad4" parent="." index="12" instance=ExtResource( 6 )]
+transform = Transform( 36, 0, 0, 0, 36, 0, 0, 0, 36, -377.748, 0, -242.329 )
+mode = 1
+_sections_unfolded = [ "Transform" ]
+
+[node name="launchpad5" parent="." index="13" instance=ExtResource( 6 )]
+transform = Transform( 36, 0, 0, 0, 36, 0, 0, 0, 36, -507.821, 0, -367.057 )
+mode = 1
+_sections_unfolded = [ "Transform" ]
+
+[node name="launchpad6" parent="." index="14" instance=ExtResource( 6 )]
+transform = Transform( 36, 0, 0, 0, 36, 0, 0, 0, 36, -641.459, 0, -484.658 )
+mode = 1
+_sections_unfolded = [ "Transform" ]
+
+[node name="launchpad7" parent="." index="15" instance=ExtResource( 6 )]
+transform = Transform( 36, 0, 0, 0, 36, 0, 0, 0, 36, -769.751, 0, -618.295 )
+mode = 1
+_sections_unfolded = [ "Transform" ]
+
+[node name="launchpad8" parent="." index="16" instance=ExtResource( 6 )]
+transform = Transform( 36, 0, 0, 0, 36, 0, 0, 0, 36, -898.042, 0, -744.805 )
+mode = 1
+_sections_unfolded = [ "Transform" ]
+
+[node name="RigidBody" type="RigidBody" parent="." index="17"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0121975, 0 )
+input_ray_pickable = true
+input_capture_on_drag = false
+collision_layer = 1
+collision_mask = 1
+mode = 1
+mass = 1.0
+friction = 1.0
+bounce = 0.0
+gravity_scale = 1.0
+custom_integrator = false
+continuous_cd = false
+contacts_reported = 0
+contact_monitor = false
+sleeping = false
+can_sleep = true
+axis_lock_linear_x = false
+axis_lock_linear_y = false
+axis_lock_linear_z = false
+axis_lock_angular_x = false
+axis_lock_angular_y = false
+axis_lock_angular_z = false
+linear_velocity = Vector3( 0, 0, 0 )
+linear_damp = -1.0
+angular_velocity = Vector3( 0, 0, 0 )
+angular_damp = -1.0
+
+[node name="CollisionShape" type="CollisionShape" parent="RigidBody" index="0"]
+transform = Transform( 400, 8.74224e-08, 0, -3.49691e-05, 0.999996, 6.03983e-05, -5.28019e-12, 1.50995e-07, -400, 0, 0, 0 )
+shape = SubResource( 2 )
+disabled = false
+_sections_unfolded = [ "Transform" ]
+
