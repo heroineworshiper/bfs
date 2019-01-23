@@ -1,0 +1,648 @@
+# -*- coding: utf-8 -*-
+
+
+# Big F*n simulator.
+# Create a grid fin.
+
+# Must load the Draft workbench first
+
+import FreeCAD
+import math
+import Draft, Part
+import collections
+
+
+BezierPoint = collections.namedtuple("BezierPoint", ['z', 'control1', 'value', 'control2'])
+
+
+def toRad(angle):
+    return angle * math.pi * 2.0 / 360.0
+
+# solve 2D bezier curve with X or Y for values
+def doBezier(point1, point2, z):
+    y0 = point1.value
+    y1 = point1.value + point1.control2
+    y2 = point2.value + point2.control1
+    y3 = point2.value
+    z0 = point1.z
+    z1 = point2.z
+    t = (float(z) - z0) / (z1 - z0)
+    tpow2 = t * t
+    tpow3 = t * t * t
+    invt = 1.0 - t
+    invtpow2 = invt * invt
+    invtpow3 = invt * invt * invt
+    return              invtpow3 * y0 \
+        + 3.0 * t     * invtpow2 * y1 \
+        + 3.0 * tpow2 * invt     * y2 \
+        +       tpow3            * y3
+
+
+
+# 3D bezier curve with vectors for values
+def doBezier3D(point1, point2, z):
+    y0 = point1.value.y
+    y1 = point1.value.y + point1.control2.y
+    y2 = point2.value.y + point2.control1.y
+    y3 = point2.value.y
+    z0 = point1.z
+    z1 = point2.z
+    t = (float(z) - z0) / (z1 - z0)
+    tpow2 = t * t
+    tpow3 = t * t * t
+    invt = 1.0 - t
+    invtpow2 = invt * invt
+    invtpow3 = invt * invt * invt
+    y =                 invtpow3 * y0 \
+        + 3.0 * t     * invtpow2 * y1 \
+        + 3.0 * tpow2 * invt     * y2 \
+        +       tpow3            * y3
+    
+    x0 = point1.value.x
+    x1 = point1.value.x + point1.control2.x
+    x2 = point2.value.x + point2.control1.x
+    x3 = point2.value.x
+    x =                 invtpow3 * x0 \
+        + 3.0 * t     * invtpow2 * x1 \
+        + 3.0 * tpow2 * invt     * x2 \
+        +       tpow3            * x3
+    return Draft.Vector(x, y, z)
+
+
+
+
+# mm
+PIVOT_RADIUS = 200.0
+FUSE_RADIUS = 4500.0
+# 100mm space from fuselage for the latch
+# don't know why they didn't put the latch below the grid fin
+INNER_RADIUS = 4600.0
+OUTER_RADIUS = INNER_RADIUS + PIVOT_RADIUS * 2.0
+# hinge extends below the inner radius so the grid stands off from the fuselage
+HINGE_Y = FUSE_RADIUS + PIVOT_RADIUS
+# outer Y calculated from bezier curve
+outerR = []
+
+THICKNESS = 4.0
+# extra material on the top & bottom to be taken off during a smoothing step
+INNER_PAD = 25.0
+OUTER_PAD = 10.0
+
+GRID_H = 3000.0
+
+GRID_SPACE = GRID_H / 6.0
+WIDTH = GRID_SPACE * 5.0
+# radians covered by the width
+WIDTH_ANGLE = WIDTH / OUTER_RADIUS
+# height without notched corners
+GRID_H2 = GRID_SPACE * 5.0
+# grid starts 2 pivot radiuses below pivot
+GRID_TOP = -PIVOT_RADIUS * 2.0
+GRID_BOTTOM = GRID_TOP - GRID_H
+NOTCH_Z = GRID_BOTTOM + 350.0
+# intersections per strip
+INTERSECTIONS = 11.0
+# side intersections
+SIDE_INTERSECTIONS = 7.0
+BOTTOM_INTERSECTIONS = 6.0
+doc = App.activeDocument()
+DEPTH = Draft.Vector(INNER_RADIUS - OUTER_RADIUS, 0, 0)
+ARCH_H = 125.0
+
+
+
+diagonals1 = []
+diagonals2 = []
+hingePoints = []
+
+def getOuterR(z):
+    index = int(z - GRID_BOTTOM)
+    if index < 0:
+        index = 0
+    return outerR[index]
+
+def getInnerR(z):
+    index = int(z - GRID_BOTTOM)
+    if index < 0:
+        index = 0
+    return outerR[index] + DEPTH.x
+
+def polarToXYZ(angle, radius, z):
+    x = radius * math.cos(angle)
+    y = -radius * math.sin(angle)
+    return Draft.Vector(x, y, z)
+
+def polarVToXYZ(point):
+    x = point.y * math.cos(point.x)
+    y = -point.y * math.sin(point.x)
+    return Draft.Vector(x, y, point.z)
+
+def XYZToPolar(xyz):
+    angle = math.atan2(-xyz.y, xyz.x)
+    radius = math.hypot(xyz.x, xyz.y)
+    return Draft.Vector(angle, radius, xyz.z)
+
+lineSegments = 16
+
+# make an arc between 2 points on the inner radius, with a height given
+# easier than using Draft.makeCircle
+def makeArch(point1, point2, height, extraPoint, notchIt):
+    pad = Draft.Vector(-INNER_PAD, 0.0, 0.0)
+    result = []
+    steps = lineSegments
+    if extraPoint:
+        steps = steps + 1
+    
+    # convert to polar to do the radius deformations
+    point1Polar = XYZToPolar(point1)
+    point2Polar = XYZToPolar(point2)
+    # need difference between inner radius & point radius, in case the point arguments aren't on the inner radius
+    radius1Diff = point1Polar.y - getInnerR(point1Polar.z)
+    radius2Diff = point2Polar.y - getInnerR(point2Polar.z)
+
+    for i in range(steps):
+        fraction = float(i) / float(steps - 1)
+        x = fraction * (point2Polar.x - point1Polar.x) + point1Polar.x
+        z = fraction * (point2Polar.z - point1Polar.z) + point1Polar.z
+        y = getInnerR(z)
+        deform = math.sin(fraction * math.pi) * height
+        radiusDiff = fraction * (radius2Diff - radius1Diff) + radius1Diff
+
+
+        # need to add arch deformation & padding in XYZ coords
+        xyzResult = polarToXYZ(x, y + radiusDiff, z) + pad
+        
+        
+        if not notchIt or z >= NOTCH_Z:
+            result.append(Draft.Vector(xyzResult.x + deform, xyzResult.y, xyzResult.z))
+    return result
+
+# always the outer radius
+def makeOuterLine(point1, point2, extraPoint, notchIt):
+    pad = Draft.Vector(OUTER_PAD, 0.0, 0.0)
+    result = []
+    steps = lineSegments
+    if extraPoint:
+        steps = steps + 1
+
+
+    # convert to polar to do the radius deformations
+    point1Polar = XYZToPolar(point1)
+    point2Polar = XYZToPolar(point2)
+
+    
+    for i in range(steps):
+        fraction = float(i) / float(steps - 1)
+        x = fraction * (point2Polar.x - point1Polar.x) + point1Polar.x
+        z = fraction * (point2Polar.z - point1Polar.z) + point1Polar.z
+        y = getOuterR(z)
+        xyzResult = polarToXYZ(x, y, z) + pad
+
+        if not notchIt or z >= NOTCH_Z:
+            result.append(xyzResult)
+    return result
+
+
+# bezier curve for outer hinge lines
+def makeOuterBezierLine(start, end, endR):
+    points = []
+    for i in range(lineSegments):
+        fraction = float(i) / float(lineSegments - 1)
+        z = fraction * (end.z - start.z) + start.z
+        a = doBezier(start, end, z)
+        #a = start.value
+        r = getOuterR(z) * (1.0 - fraction) + endR * fraction
+        xyzResult = polarToXYZ(a, r, z)
+        points.append(xyzResult)
+    return Draft.makeWire(points, closed=False, face=False, support=None)
+
+
+def makeHinge():
+    # draw all attachment points
+    for i in range(len(hingePoints)):
+        xyz = polarVToXYZ(hingePoints[i])
+        point = Draft.makePoint(xyz)
+        point.Label = 'hingePoints[%d]' % i
+
+    cylinder = doc.addObject("Part::Cylinder","Cylinder")
+    cylinder.Label = "Cylinder"
+    cylinder.Radius = PIVOT_RADIUS
+    cylinder.Height = 1700
+    cylinder.Placement = App.Placement(
+        App.Vector(HINGE_Y, cylinder.Height / 2, 0.0),
+        App.Rotation(App.Vector(1,0,0),90))
+
+    pl = FreeCAD.Placement(
+        App.Vector(HINGE_Y, -750, 0.0),
+        App.Rotation(App.Vector(1,0,0),90))
+    radius = PIVOT_RADIUS + 25
+
+
+    # outer arc
+    arc = Draft.makeCircle(radius, pl, False, 45, -135, None)
+    arcTop = XYZToPolar(Draft.Vector(pl.Base.x + radius * math.cos(toRad(45)), 
+            pl.Base.y, 
+            pl.Base.z + radius * math.sin(toRad(45))))
+    arcBottom = XYZToPolar(Draft.Vector(pl.Base.x + radius * math.cos(toRad(-135)), 
+            pl.Base.y, 
+            pl.Base.z + radius * math.sin(toRad(-135))))
+    # join outer arc to grid
+    makeOuterBezierLine(BezierPoint(hingePoints[20].z, 0.0, hingePoints[20].x, 0.0),
+        BezierPoint(arcTop.z, 0.0, arcTop.x, 0.0),
+        arcTop.y)
+    makeOuterBezierLine(BezierPoint(hingePoints[23].z, 0.0, hingePoints[23].x, 0.0),
+        BezierPoint(arcBottom.z, 0.0, arcBottom.x, 0.0),
+        arcBottom.y)
+    
+    
+    
+    #Draft.makeWire([circle0Endpoints[0], hingePoints[20]], 
+        #False, 
+        #False, 
+        #None)
+    #Draft.makeWire([circle0Endpoints[1], hingePoints[23]], 
+        #False, 
+        #False, 
+        #None)
+
+    # inner arc
+    if False:
+        pl = FreeCAD.Placement(
+            App.Vector(HINGE_Y, -650, 0.0),
+            App.Rotation(App.Vector(1,0,0),90))
+        circle1 = Draft.makeCircle(radius, pl, False, 45, -135, None)
+        circle1Endpoints = [
+            Draft.Vector(pl.Base.x + radius * math.cos(toRad(45)), 
+                pl.Base.y, 
+                pl.Base.z + radius * math.sin(toRad(45))),
+            Draft.Vector(pl.Base.x + radius * math.cos(toRad(-135)), 
+                pl.Base.y, 
+                pl.Base.z + radius * math.sin(toRad(-135)))]
+        # join inner arc to grid
+        Draft.makeWire([circle1Endpoints[0], hingePoints[1]], 
+            False, 
+            False, 
+            None)
+        Draft.makeWire([circle1Endpoints[1], hingePoints[2]], 
+            False, 
+            False, 
+            None)
+
+
+
+
+
+
+
+
+
+def smooth(points):
+    result = []
+    for i in points:
+        polar = XYZToPolar(i)
+        outerR = getOuterR(polar.z)
+        innerR = getInnerR(polar.z)
+        if(polar.y > outerR):
+            polar.y = outerR
+        elif (polar.y < innerR):
+            polar.y = innerR
+        result.append(polarToXYZ(polar.x, polar.y, polar.z))
+    return result
+
+
+
+def makeSlice(x1, y1, x2, y2, thickness, intersections, counter):
+    # points of the grid intersections
+    crossPoints = []
+    # points for the inner, serrated edge
+    innerPoints = []
+    # points for the outer, smooth edge
+    outerPoints = []
+    
+        
+    # calculate the crossPoints
+    for i in range(int(intersections)):
+        angle = x1 + i / (intersections - 1) * (x2 - x1)
+        y = y1 + i / (intersections - 1) * (y2 - y1)
+
+        if y >= GRID_BOTTOM and y <= GRID_TOP:
+            point = polarToXYZ(angle, getOuterR(y), y)
+            crossPoints.append(point)
+    
+    # is the strip visible?
+    if len(crossPoints) >= 2:
+        # fill points between the crossPoints
+        for i in range(len(crossPoints) - 1):
+            line = makeOuterLine(crossPoints[i], 
+                crossPoints[i + 1], 
+                i == len(crossPoints) - 1,
+                counter == 4)
+            outerPoints.extend(line)
+            arc = makeArch(crossPoints[i] + DEPTH, 
+                crossPoints[i + 1] + DEPTH, 
+                ARCH_H, 
+                i == len(crossPoints) - 1,
+                counter == 4)
+            innerPoints.extend(arc)
+    
+
+        # convert the points into 4 wires
+        innerPoints0 = []
+        innerPoints1 = []
+        outerPoints0 = []
+        outerPoints1 = []
+        taperZ0 = GRID_TOP - GRID_SPACE * 1.5
+        taperZ1 = GRID_TOP - GRID_SPACE
+        taperZ2 = GRID_TOP
+        THICKNESS2 = 14.0
+        THICKNESS1 = 10.0
+        for i in range(len(outerPoints)):
+            thickness2 = thickness
+
+            if (counter == 8 and outerPoints[i].z >= taperZ0) or \
+                (counter == 9 and outerPoints[i].z >= taperZ1):
+                thickness2 = thickness2 * (1.0 + THICKNESS2 * \
+                    (outerPoints[i].z - taperZ0) / \
+                    (taperZ2 - taperZ0))
+
+            if counter == 10 and outerPoints[i].z >= taperZ1:
+                thickness2 = thickness2 * (1.0 + THICKNESS1 * \
+                    (outerPoints[i].z - taperZ0) / \
+                    (taperZ2 - taperZ0))
+
+            if counter == 11 and outerPoints[i].z >= taperZ1:
+                thickness2 = thickness2 * (1.0 + THICKNESS1 * \
+                    (outerPoints[i].z - taperZ1) / \
+                    (taperZ2 - taperZ1))
+
+            outerPoints0.append(outerPoints[i] - thickness2)
+            outerPoints1.append(outerPoints[i] + thickness2)
+            innerPoints0.append(innerPoints[i] + thickness2)
+            innerPoints1.append(innerPoints[i] - thickness2)
+
+        # smoothing pass
+        smoothOuterPoints0 = smooth(outerPoints0)
+        smoothOuterPoints1 = smooth(outerPoints1)
+        smoothInnerPoints0 = smooth(innerPoints0)
+        smoothInnerPoints1 = smooth(innerPoints1)
+
+        line0 = Draft.makeWire(smoothOuterPoints0, closed=False, face=False, support=None)
+        line1 = Draft.makeWire(smoothOuterPoints1, closed=False, face=False, support=None)
+        line2 = Draft.makeWire(smoothInnerPoints0, closed=False, face=False, support=None)
+        line3 = Draft.makeWire(smoothInnerPoints1, closed=False, face=False, support=None)
+        
+        # save hinge attachment points
+        last = len(smoothOuterPoints1)
+        if counter == 11:
+            hingePoints.append(XYZToPolar(smoothOuterPoints0[last - 3]))
+            hingePoints.append(XYZToPolar(smoothOuterPoints1[last - 3]))
+            hingePoints.append(XYZToPolar(smoothInnerPoints0[last - 3]))
+            hingePoints.append(XYZToPolar(smoothInnerPoints1[last - 3]))
+        elif counter == 9:
+            hingePoints.append(XYZToPolar(smoothOuterPoints0[last - 1]))
+            hingePoints.append(XYZToPolar(smoothOuterPoints1[last - 1]))
+            hingePoints.append(XYZToPolar(smoothInnerPoints0[last - 1]))
+            hingePoints.append(XYZToPolar(smoothInnerPoints1[last - 1]))
+        elif counter == 8:
+            hingePoints.append(XYZToPolar(smoothOuterPoints0[last - 8]))
+            hingePoints.append(XYZToPolar(smoothOuterPoints1[last - 8]))
+            hingePoints.append(XYZToPolar(smoothInnerPoints0[last - 8]))
+            hingePoints.append(XYZToPolar(smoothInnerPoints1[last - 8]))
+        
+        loft = doc.addObject('Part::Loft','Loft')
+        loft.Sections = [ line0, line1, line2, line3 ]
+        loft.Solid = False
+        loft.Ruled = True
+        loft.Closed = True
+
+        result = { 'inner':innerPoints, 'outer':outerPoints }
+        return result
+        
+    else:
+        return None
+
+
+
+def makeNotchArch(innerPoint1, innerPoint2, outerPoint1, outerPoint2, thickness):
+    # subtract padding
+    innerPoint1 = innerPoint1 + Draft.Vector(INNER_PAD, 0.0, 0.0)
+    points0 = smooth(makeArch(innerPoint1 - thickness, innerPoint2 - thickness, ARCH_H, True, False))
+    points1 = smooth(makeArch(innerPoint1 + thickness, innerPoint2 + thickness, ARCH_H, True, False))
+    points2 = smooth(makeOuterLine(outerPoint1 + thickness, outerPoint2 + thickness, True, False))
+    points3 = smooth(makeOuterLine(outerPoint1 - thickness, outerPoint2 - thickness, True, False))
+
+
+
+    line0 = Draft.makeWire(points0, False, False, False)
+    line1 = Draft.makeWire(points1, False, False, False)
+    line2 = Draft.makeWire(points2, False, False, False)
+    line3 = Draft.makeWire(points3, False, False, False)
+    
+    loft = doc.addObject('Part::Loft','Loft')
+    loft.Sections = [ line0, line1, line2, line3 ]
+    loft.Solid = False
+    loft.Ruled = True
+    loft.Closed = True
+    return
+
+def makeSolid(point1, point2, point3, point4, thickness):
+    # subtract padding
+    point2.x = getOuterR(point2.z)
+    point3.x = getOuterR(point3.z)
+    line0 = Draft.makeWire([point1 - thickness, point2 - thickness, point3 - thickness, point4 - thickness], closed=True, face=True, support=None)
+    line1 = Draft.makeWire([point1 + thickness, point2 + thickness, point3 + thickness, point4 + thickness], closed=True, face=True, support=None)
+    loft = doc.addObject('Part::Loft','Loft')
+    loft.Sections = [ line0, line1 ]
+    loft.Solid = False
+    loft.Ruled = True
+    loft.Closed = True
+    return
+
+    
+    
+
+
+
+def makeGrid():
+    # chopped corners
+    cornerW = WIDTH_ANGLE / (INTERSECTIONS - 1)
+    cornerH = GRID_H2 / (INTERSECTIONS - 1)
+    # start at double the height
+    y = GRID_BOTTOM - GRID_H
+    counter = 0
+    while y < GRID_TOP:
+        #if True:
+        #    y = 0
+        x2 = WIDTH_ANGLE / 2
+        y2 = y + GRID_H2
+        intersections = INTERSECTIONS
+        if counter == 7:
+            x2 = x2 - cornerW
+            y2 = y2 - cornerH
+            intersections = intersections - 1
+        elif counter == 10:
+            x2 = -WIDTH_ANGLE / 2 + cornerW * 3
+            y2 = y + cornerH * 3
+            intersections = 4.0
+
+        slice = makeSlice(-WIDTH_ANGLE / 2, 
+            y, 
+            x2, 
+            y2, 
+            Draft.Vector(0.0, THICKNESS / 2, THICKNESS / 2), 
+            intersections,
+            counter)
+        diagonals1.append(slice)
+
+        x2 = -WIDTH_ANGLE / 2
+        y2 = y + GRID_H2
+        intersections = INTERSECTIONS
+        if counter == 7:
+            x2 = x2 + cornerW
+            y2 = y2 - cornerH
+            intersections = intersections - 1
+        elif counter == 10:
+            x2 = WIDTH_ANGLE / 2 - cornerW * 3
+            y2 = y + cornerH * 3
+            intersections = 4.0
+
+        slice = makeSlice(WIDTH_ANGLE / 2, 
+            y, 
+            x2, 
+            y2, 
+            Draft.Vector(0.0, THICKNESS / 2, -THICKNESS / 2), 
+            intersections,
+            counter)
+        diagonals2.append(slice)
+        y = y + GRID_SPACE
+        counter = counter + 1
+
+    # create the notch with diagonal points
+    #print 'len=', len(diagonals1), ' diagonals1=', diagonals1[4]
+    #print 'len=', len(diagonals2), ' diagonals2=', diagonals2[4]
+
+    makeNotchArch(diagonals1[4]['inner'][0], 
+        diagonals1[3]['inner'][0],
+        diagonals1[4]['outer'][0], 
+        diagonals1[3]['outer'][0],
+        Draft.Vector(0.0, THICKNESS / 2, 0.0))
+    makeNotchArch(diagonals2[4]['inner'][0], 
+        diagonals2[3]['inner'][0],
+        diagonals2[4]['outer'][0], 
+        diagonals2[3]['outer'][0],
+        Draft.Vector(0.0, THICKNESS / 2, 0.0))
+    makeSolid(diagonals1[4]['inner'][0], 
+        diagonals1[4]['outer'][0], 
+        diagonals2[4]['outer'][0],
+        diagonals2[4]['inner'][0],
+        Draft.Vector(0.0, 0.0, -THICKNESS / 2))
+
+
+    # fillers
+    y1 = GRID_TOP - cornerH
+    y2 = GRID_TOP - cornerH * 3
+    makeSlice(WIDTH_ANGLE / 2 - cornerW, 
+        y1, 
+        WIDTH_ANGLE / 2 - cornerW, 
+        y2, 
+        Draft.Vector(0.0, THICKNESS / 2, 0.0), 
+        2, 
+        -1)
+    makeSlice(-WIDTH_ANGLE / 2 + cornerW, 
+        y1, 
+        -WIDTH_ANGLE / 2 + cornerW, 
+        y2, 
+        Draft.Vector(0.0, THICKNESS / 2, 0.0), 
+        2, 
+        -1)
+    makeSlice(WIDTH_ANGLE / 2 - cornerW * 3, 
+        y1, 
+        WIDTH_ANGLE / 2 - cornerW * 3, 
+        y2, 
+        Draft.Vector(0.0, THICKNESS / 2, 0.0), 
+        2, 
+        -1)
+    makeSlice(-WIDTH_ANGLE / 2 + cornerW * 3, 
+        y1, 
+        -WIDTH_ANGLE / 2 + cornerW * 3, 
+        y2, 
+        Draft.Vector(0.0, THICKNESS / 2, 0.0), 
+        2, 
+        -1)
+
+
+
+
+    # outline
+
+    makeSlice(-WIDTH_ANGLE / 2, 
+        GRID_BOTTOM + GRID_H2, 
+        -WIDTH_ANGLE / 2, 
+        GRID_BOTTOM, 
+        Draft.Vector(0.0, THICKNESS / 2, 0.0), 
+        SIDE_INTERSECTIONS - 1, 
+        -1)
+    makeSlice(WIDTH_ANGLE / 2, 
+        GRID_BOTTOM + GRID_H2, 
+        WIDTH_ANGLE / 2, 
+        GRID_BOTTOM, 
+        Draft.Vector(0.0, THICKNESS / 2, 0.0), 
+        SIDE_INTERSECTIONS - 1, 
+        -1)
+    makeSlice(-WIDTH_ANGLE / 2, 
+        GRID_BOTTOM, 
+        WIDTH_ANGLE / 2, 
+        GRID_BOTTOM, 
+        Draft.Vector(0.0, 0.0, THICKNESS / 2), 
+        BOTTOM_INTERSECTIONS, 
+        -1)
+
+
+
+
+
+# create bezier curve lookup table for the outer Y
+def initOuter():
+    z = GRID_BOTTOM
+    bezierPoints = [
+        BezierPoint(GRID_BOTTOM,                 0.0, OUTER_RADIUS,                         0.0),
+        BezierPoint(GRID_TOP - GRID_SPACE * 2.0, 0.0, OUTER_RADIUS,                         0.0),
+        BezierPoint(GRID_TOP,                    0.0, OUTER_RADIUS + PIVOT_RADIUS,    0.0),
+        BezierPoint(PIVOT_RADIUS,                PIVOT_RADIUS, INNER_RADIUS + PIVOT_RADIUS, 0.0)
+    ]
+    #bezierPoints = [
+        #BezierPoint(GRID_BOTTOM,  0.0, OUTER_RADIUS, 0.0),
+        #BezierPoint(PIVOT_RADIUS, 0.0, OUTER_RADIUS, 0.0)
+    #]
+    for i in range(len(bezierPoints) - 1):
+        point1 = bezierPoints[i]
+        point2 = bezierPoints[i + 1]
+        for z in range(int(point1.z), int(point2.z)):
+            outerR.append(doBezier(point1, point2, z))
+
+
+
+    testPoints = []
+    z0 = bezierPoints[0].z
+    z1 = bezierPoints[len(bezierPoints) - 1].z
+    for i in range(int(z1) - int(z0)):
+        testPoints.append(Draft.Vector(outerR[i], 0.0, z0 + i))
+
+
+    Draft.makeWire(testPoints, closed=False, face=False, support=None)
+
+
+
+initOuter()
+
+makeGrid()
+makeHinge()
+
+
+
+
+
+
+
+
+

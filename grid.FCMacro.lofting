@@ -1,0 +1,134 @@
+# -*- coding: utf-8 -*-
+
+
+# Big F*n simulator.
+# Create a grid fin using lofted rectangles.  Too slow.
+
+import FreeCAD
+import math
+import Draft, Part
+
+def toRad(angle):
+    return angle * math.pi * 2.0 / 360.0
+
+# mm
+INNER_RADIUS = 4550.0
+OUTER_RADIUS = 4850.0
+
+HEIGHT2 = 3000.0
+GRID_SPACE = HEIGHT2 / 6.0
+WIDTH = GRID_SPACE * 5.0
+# radians covered by the width
+WIDTH_ANGLE = WIDTH / OUTER_RADIUS
+HEIGHT1 = GRID_SPACE * 5.0
+# intersections per strip
+INTERSECTIONS = 11.0
+doc = App.activeDocument()
+depth = Draft.Vector(INNER_RADIUS - OUTER_RADIUS, 0, 0)
+
+
+def polarToXYZ(angle, radius, z):
+    x = radius * math.cos(angle)
+    y = -radius * math.sin(angle)
+    return Draft.Vector(x, y, z)
+
+lineSegments = 16
+
+# make an arc between 2 points, with a height given
+# easier than using Draf.makeCircle
+def makeArc(point1, point2, height, extraPoint):
+    result = []
+    steps = lineSegments
+    if extraPoint:
+        steps = steps + 1
+	
+    for i in range(steps):
+        fraction = float(i) / float(steps - 1)
+        x = fraction * (point2.x - point1.x) + point1.x
+        y = fraction * (point2.y - point1.y) + point1.y
+        z = fraction * (point2.z - point1.z) + point1.z
+        a = math.sin(fraction * math.pi) * height
+        result.append(Draft.Vector(x + a, y, z))
+    return result
+
+def makeLine(point1, point2, extraPoint):
+    result = []
+    steps = lineSegments
+    if extraPoint:
+        steps = steps + 1
+    for i in range(steps):
+        fraction = float(i) / float(steps - 1)
+        x = fraction * (point2.x - point1.x) + point1.x
+        y = fraction * (point2.y - point1.y) + point1.y
+        z = fraction * (point2.z - point1.z) + point1.z
+        result.append(Draft.Vector(x, y, z))
+    return result
+
+
+def makeSlice(startY, offset, reverse):
+    # points of the grid intersections
+    intersections = []
+    # points for the inner, serrated edge
+    innerPoints = []
+    # points for the outer, smooth edge
+    outerPoints = []
+    
+    
+    endY = startY + HEIGHT1
+    startX = -WIDTH_ANGLE / 2
+    if reverse:
+        startX = -startX
+    
+    # calculate the intersections
+    for i in range(int(INTERSECTIONS)):
+        if reverse:
+            angle = startX - i / (INTERSECTIONS - 1) * WIDTH_ANGLE
+        else:
+            angle = startX + i / (INTERSECTIONS - 1) * WIDTH_ANGLE
+        
+        y = startY + i / (INTERSECTIONS - 1) * HEIGHT1
+
+        if y >= 0 and y <= HEIGHT2:
+            point = polarToXYZ(angle, OUTER_RADIUS, y)
+            intersections.append(point)
+    
+    # is the strip visible?
+    if len(intersections) >= 2:
+        # fill points between the intersections
+        for i in range(len(intersections) - 1):
+            line = makeLine(intersections[i], intersections[i + 1], i == len(intersections) - 1)
+            outerPoints.extend(line)
+            arc = makeArc(intersections[i] + depth, intersections[i + 1] + depth, 100.0, i == len(intersections) - 1)
+            innerPoints.extend(arc)
+    
+
+        # convert the points into a series of rectangles forming a tube
+        rects = []
+        for i in range(len(outerPoints)):
+            points = [
+                outerPoints[i] - offset,
+                outerPoints[i] + offset,
+                innerPoints[i] + offset,
+                innerPoints[i] - offset
+            ]
+            rects.append(Draft.makeWire(points, closed=True, face=False, support=None))
+            # loft is limited to 16 profiles
+            if len(rects) >= 16 or i == len(outerPoints) - 1:
+                loft = doc.addObject('Part::Loft','Loft')
+                loft.Sections = rects
+                loft.Solid = False
+                rects = []
+
+
+    
+
+
+y = -HEIGHT2
+while y < HEIGHT2:
+    makeSlice(y, Draft.Vector(0.0, 2.0, 2.0),False)
+    y = y + GRID_SPACE
+
+y = -HEIGHT2
+while y < HEIGHT2:
+    makeSlice(y, Draft.Vector(0.0, 2.0, -2.0), True)
+    y = y + GRID_SPACE

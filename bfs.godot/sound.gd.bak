@@ -1,0 +1,148 @@
+
+
+
+
+
+var players = Array()
+const TOTAL_VOICES = 32
+var currentVoice = 0
+var explosionTime = 0.0
+# current position in envelope
+var envelopeTime = 0.0
+var envelopeNumber = 0
+
+var envelope2On = false
+var explosion2Time = 0.0
+var envelope2Time = 0.0
+
+
+# current envelope duration
+var envelopeDuration = 4.0
+var envelope2Duration = 2.0
+var envelope2Start = envelopeDuration / 2
+
+# baked pitch shift
+var explosion1Paths = [
+    'explosion1a.wav',
+    'explosion1b.wav',
+    'explosion1c.wav',
+    'explosion1d.wav',
+    'explosion1e.wav'
+]
+
+var explosion1Samples = Array()
+
+var explosion2Paths = [
+    'explosion2a.wav',
+    'explosion2a.wav',
+    'explosion2a.wav',
+    'explosion2b.wav',
+    'explosion2b.wav'
+]
+
+var explosion2Samples = Array()
+
+func initFlames(parent):
+    for i in range(0, explosion1Paths.size()):
+        explosion1Samples.append(load('res://assets/' + explosion1Paths[i]))
+    for i in range(0, explosion2Paths.size()):
+        explosion2Samples.append(load('res://assets/' + explosion2Paths[i]))
+
+    for i in range(0, TOTAL_VOICES):
+        var player = AudioStreamPlayer.new()
+        players.append(player)
+        parent.add_child(player)
+        player.stream = explosion1Samples[0]
+        
+
+
+func startFlames():
+    players[currentVoice].play()
+    currentVoice += 1
+    if currentVoice >= TOTAL_VOICES:
+        currentVoice = 0
+    explosionTime = 0.0
+    envelopeTime = 0.0
+
+
+func handleFlames(delta, commandedThrottle, currentThrottle):
+    explosionTime += delta
+    envelopeTime += delta
+    
+# calculate envelope from rate of throttle change.  Should use speed
+#    if commandedThrottle > currentThrottle:
+#        var diff = commandedThrottle - currentThrottle
+#        if diff > 0.1:
+#            envelopeDuration = 1.0
+#        elif diff < -0.1:
+#            envelopeDuration = 4.0
+#        else:
+#            envelopeDuration = 3.0
+    envelopeDuration = 4.0
+
+# start new envelope
+    if envelopeTime >= envelopeDuration:
+        print('starting envelope1')
+        envelopeTime = 0
+        envelopeNumber += 1
+        envelope2Start = envelopeDuration - 1
+
+# calculate next explosion time
+    var nextExplosion = randf() * 0.1
+
+# start next explosion
+    if explosionTime > nextExplosion:
+        explosionTime = 0
+# pitch shift it based on the longest envelope
+        var sample = envelopeTime / 4.0 * explosion1Samples.size()
+
+#        print('handleFlames voice=%d sample=%s' % [currentVoice, explosion1Paths[int(sample)]])
+        players[currentVoice].stream = explosion1Samples[int(sample)]
+        players[currentVoice].volume_db = 6.0 * (currentThrottle - 0.5) - 6.0
+        players[currentVoice].play()
+
+
+        currentVoice += 1
+        if currentVoice >= TOTAL_VOICES:
+            currentVoice = 0
+    
+# start envelope 2
+    if (envelopeNumber % 3) == 0:
+        envelope2Start -= delta
+
+        if envelope2Start < 0 && !envelope2On:
+            envelope2On = true
+
+
+# handle envelope 2
+    if envelope2On:
+        explosion2Time += delta
+        envelope2Time += delta
+
+
+
+# end the envelope
+        if envelope2Time >= envelope2Duration:
+            envelope2Time = 0
+            envelope2On = false
+        else:
+# calculate next explosion time
+            nextExplosion = randf() * 0.1
+            if explosion2Time > nextExplosion:
+                explosion2Time = 0
+        
+# pitch shift it
+                var sample = envelope2Time / envelope2Duration * explosion2Samples.size()
+                players[currentVoice].stream = explosion2Samples[int(sample)]
+                players[currentVoice].volume_db = 6.0
+                players[currentVoice].play()
+
+                print('envelope2: sample=%s' % [explosion2Paths[int(sample)]])
+
+                currentVoice += 1
+                if currentVoice >= TOTAL_VOICES:
+                    currentVoice = 0
+
+        
+        
+    

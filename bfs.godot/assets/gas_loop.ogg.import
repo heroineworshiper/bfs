@@ -1,0 +1,15 @@
+[remap]
+
+importer="ogg_vorbis"
+type="AudioStreamOGGVorbis"
+path="res://.import/gas_loop.ogg-145a3a52599c83adcc3610cf45527092.oggstr"
+
+[deps]
+
+source_file="res://assets/gas_loop.ogg"
+dest_files=[ "res://.import/gas_loop.ogg-145a3a52599c83adcc3610cf45527092.oggstr" ]
+
+[params]
+
+loop=true
+loop_offset=0

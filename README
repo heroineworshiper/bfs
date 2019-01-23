@@ -6,13 +6,24 @@ Blocked by Tory Bruno.
 
 
 
-
+All models are created in Blender
 
 raptor_flame2.blend - the most recent version of the raptor
-booster.blend - the most recent booster
-bfs.blend - the most recent ship
+booster3.blend - the most recent booster
+bfs6.blend - the most recent ship
+
+ship.py - run to synthesize the procedural parts of the ship
+booster.py - run to synthesize the procedural parts of the booster
+export_ship.py - export the .dae file of the ship
+export_booster.py - export the .dae file of the booster
 
 
+bfs.godot - the game
+
+
+
+
+Old Freecad notes:
 
 Paste engines from raptor.fcstd into bfs.fcstd, 2 sea levels & 4 vacuums.
 Place BFS engines by running bfs_engines.FCMacro 

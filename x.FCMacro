@@ -1,0 +1,7 @@
+# -*- coding: utf-8 -*-
+
+# Macro Begin: /amazon2/root/bfs/x.FCMacro +++++++++++++++++++++++++++++++++++++++++++++++++
+import FreeCAD
+import Edit
+
+# Macro End: /amazon2/root/bfs/x.FCMacro +++++++++++++++++++++++++++++++++++++++++++++++++

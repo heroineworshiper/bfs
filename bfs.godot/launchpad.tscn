@@ -260,7 +260,8 @@ material/0 = SubResource( 2 )
 _sections_unfolded = [ "Transform", "material" ]
 
 [node name="tower" type="MeshInstance" parent="." index="1"]
-transform = Transform( 0.0678455, 0, 0, 0, 0, -1, 0, 1.20091, 0, -0.832775, 2.4622, -2.90929 )
+transform = Transform( 0.0678455, 0, 0, 0, 0, -1, 0, 1.20091, 0, -0.832775, 2.77311, -2.90929 )
+visible = false
 layers = 1
 material_override = null
 cast_shadow = 1
@@ -277,6 +278,7 @@ _sections_unfolded = [ "material" ]
 
 [node name="launchpad" type="MeshInstance" parent="." index="2"]
 transform = Transform( 1, 0, 0, 0, 0, 1, 0, -1, 0, -2.78361, -0.00230598, -4.44657 )
+visible = false
 layers = 1
 material_override = null
 cast_shadow = 1
@@ -319,7 +321,7 @@ directional_shadow_depth_range = 0
 directional_shadow_max_distance = 200.0
 
 [node name="CollisionShape" type="CollisionShape" parent="." index="4"]
-transform = Transform( 1.05576, 0, 0, 0, 0.11285, 0, 0, 0, 1.96122, -0.0776351, 0.110351, -2.31043 )
+transform = Transform( 1.31941, 0, 0, 0, 0.11285, 0, 0, 0, 1.50992, -0.0977768, 0.111771, -2.91858 )
 shape = SubResource( 7 )
 disabled = false
 

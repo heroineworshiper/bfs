@@ -17,7 +17,7 @@ var rootBasis
 var pistonOrigin
 
 var state = library.GRID_RETRACTED
-const DEPLOY_TIME = 1
+const DEPLOY_TIME = 2
 var current_time = 0
 
 var commanded_angle = library.toRad(0)
@@ -44,14 +44,23 @@ func retract():
     current_time = 0
     return
 
+# calculate the piston position
+func calculatePiston(fraction):
+    var angle = fraction * library.toRad(90)
+    var radius = 0.24
+    var origin = Vector3(-radius, 0, 0)
+    var x = radius * cos(angle)
+    var z = radius * sin(angle)
+    return Vector3(x, 0, z) + origin
+
 
 func _process(delta):
     commanded_angle = library.clamp(commanded_angle, 
-        library.toRad(-45), 
-        library.toRad(45))
+        -library.GRID_LIMIT, 
+        library.GRID_LIMIT)
     current_angle = library.clamp(current_angle, 
-        library.toRad(-45), 
-        library.toRad(45))
+        -library.GRID_LIMIT, 
+        library.GRID_LIMIT)
     var step = library.toRad(90) * delta
 
 
@@ -69,7 +78,7 @@ func _process(delta):
             rotate_object_local(Vector3(1, 0, 0), current_angle * fraction)
 
             grid.rotate_y(library.toRad(-90 * fraction))
-            grid_piston.transform.origin = fraction * piston_deployed
+            grid_piston.transform.origin = calculatePiston(fraction)
 
         library.GRID_EXTENDED:
             current_angle = library.doGimbal(commanded_angle, current_angle, step)
@@ -89,7 +98,7 @@ func _process(delta):
             rotate_object_local(Vector3(1, 0, 0), current_angle * fraction)
 
             grid.rotate_y(library.toRad(-90 * fraction))
-            grid_piston.transform.origin = piston_deployed * fraction
+            grid_piston.transform.origin = calculatePiston(fraction)
             if state == library.GRID_RETRACTED:
                 current_angle = library.toRad(0)
 

@@ -47,22 +47,22 @@ var booster_raptor_names = [
     'booster raptor30',
 ]
 
+
+
 onready var rigid = get_node('rigid')
+var bfs
 
-
-
-var USE_KEYBOARD = false
+# RUD states
+const RUD_NONE = 0
+const RUD_RUDDING = 1
+var rud_state = RUD_NONE
+var rud_time = 0.0
+const RUD_TIME = 1.0
 
 # roll, pitch, yaw of the center engines in rads
-var commanded_thrust_vector = Vector3()
+export var commanded_thrust_vector = Vector3()
 # delayed thrust vector
 var true_thrust_vector = Vector3()
-# maximum deflection in rads
-var MAX_VECTOR = library.toRad(10)
-# maximum roll in rads
-var MAX_ROLL = library.toRad(5)
-# rate of keyboard input deflection in rads/second
-var KEYBOARD_RATE = library.toRad(45)
 
 
 # rate of gimbal in rads/second
@@ -72,13 +72,11 @@ const PITCH_TORQUE = 20000
 const ROLL_TORQUE = 1000
 
 # engine thrust 0-1
-var commanded_throttle = 0.0
+export var commanded_throttle = 0.0
 var prevEngineState = library.ENGINE_JOYSTICK_INIT
 
 
-var grid_cam
-var engine_cam
-var player_cam
+# RUD
 
 var grids = Array()
 var grid_names = [
@@ -87,8 +85,6 @@ var grid_names = [
     'grid2',   # top right
     'grid3',   # bottom left
 ]
-
-var prev_trigger = false
 
 
 func tabulate_nodes(array, names):
@@ -117,16 +113,17 @@ func toggleGrids():
             grids[i].retract()
 
 
+
+
 func _ready():
     # Called when the node is added to the scene for the first time.
     # Initialization here.
-    grid_cam = get_parent().get_parent().find_node('grid_cam')
-    engine_cam = get_parent().get_parent().find_node('engine_cam')
-    player_cam = get_parent().get_parent().find_node('playerCam')
     sound.initFlames(self)
 
     # test vehicle domane rotations
     #rigid.rotate_z(PI / 2)
+
+    bfs = find_node('ship3')
 
     tabulate_nodes(booster_raptors, booster_raptor_names)
     tabulate_nodes(grids, grid_names)
@@ -145,9 +142,9 @@ func _ready():
     # Z of each layer in m
     var layerZ = [
         0,
-        -0.29,
-        -0.54,
-        -0.94,
+        -0.3,
+        -0.4,
+        -0.5,
     ]
 
     # starting angle of each layer
@@ -181,7 +178,7 @@ func _ready():
         # polar to XY
         var xyz = library.polarToXYZ(angle, 
             layerRadius[currentLayer], 
-            layerZ[currentLayer] - 29.0)
+            layerZ[currentLayer] - 30.75)
         
         
         booster_raptors[i].translation = xyz
@@ -202,104 +199,7 @@ func _ready():
 
 
 func _process(delta):
-
-
-# joystick input
-    if !USE_KEYBOARD:
-        var joy_x = Input.get_joy_axis(0, JOY_ANALOG_LX)
-        var joy_y = Input.get_joy_axis(0, JOY_ANALOG_LY)
-        var joy_throttle = Input.get_joy_axis(0, JOY_AXIS_6)
-        var joy_rocker = Input.get_joy_axis(0, JOY_AXIS_7)
-        var joy_rudder = Input.get_joy_axis(0, JOY_AXIS_8)
-        var joy_l2 = Input.is_joy_button_pressed(0, JOY_L2)
-        var joy_r2 = Input.is_joy_button_pressed(0, JOY_R2)
-        # share
-        var joy_l3 = Input.is_joy_button_pressed(0, JOY_L3)
-        # options
-        var joy_r3 = Input.is_joy_button_pressed(0, JOY_R3)
-        # marked L3 on joystick
-        var joy_select = Input.is_joy_button_pressed(0, JOY_SELECT)
-        # nothing
-        var joy_start = Input.is_joy_button_pressed(0, JOY_START)
-        # marked X on throttle
-        var joy_circle = Input.is_joy_button_pressed(0, JOY_SONY_CIRCLE)
-        # marked square on throttle
-        var joy_x_button = Input.is_joy_button_pressed(0, JOY_SONY_X)
-        # marked circle on throttle
-        var joy_square = Input.is_joy_button_pressed(0, JOY_SONY_SQUARE)
-        # L1 on joystick
-        var joy_l = Input.is_joy_button_pressed(0, JOY_L)
-        # trigger on joystick
-        var joy_r = Input.is_joy_button_pressed(0, JOY_R)
-
-# deploy grid fins
-        if joy_r && !prev_trigger:
-            prev_trigger = joy_r
-            toggleGrids()
-        elif !joy_r && prev_trigger:
-            prev_trigger = joy_r
-
-
-# change camera
-        if joy_l2:
-            grid_cam.make_current()
-        elif joy_r2:
-            engine_cam.make_current()
-        elif joy_square:
-            player_cam.make_current()
-
-# combine the rocker & rudder
-        if abs(joy_rocker) > abs(joy_rudder):
-            joy_rudder = joy_rocker
-
-        commanded_throttle = joy_throttle
-        commanded_thrust_vector.x = -joy_x * MAX_VECTOR
-        commanded_thrust_vector.y = -joy_y * MAX_VECTOR
-        commanded_thrust_vector.z = joy_rudder * MAX_VECTOR
-
-#        print("joy=%f, %f, %f, %f, %f" % [joy_x, joy_y, joy_throttle, joy_rocker, joy_rudder])
-
-    else:
-
-        var angle_step = KEYBOARD_RATE * delta
-        var throttle_step = library.THROTTLE_RATE * delta
-
-
-
-
-
-        # thrust vectoring
-        if Input.is_action_pressed("ui_up"):
-            commanded_thrust_vector.y += angle_step
-        if Input.is_action_pressed("ui_down"):
-            commanded_thrust_vector.y -= angle_step
-        if Input.is_action_pressed("ui_left"):
-            commanded_thrust_vector.z += angle_step
-        if Input.is_action_pressed("ui_right"):
-            commanded_thrust_vector.z -= angle_step
-        if Input.is_action_pressed("ui_yaw_left"):
-            commanded_thrust_vector.x += angle_step
-        if Input.is_action_pressed("ui_yaw_right"):
-            commanded_thrust_vector.x -= angle_step
-
-        if Input.is_action_pressed("ui_center"):
-            commanded_thrust_vector.x = 0
-            commanded_thrust_vector.y = 0
-            commanded_thrust_vector.z = 0
-
-        if Input.is_action_pressed("ui_throttle_up"):
-            commanded_throttle += throttle_step
-        if Input.is_action_pressed("ui_throttle_down"):
-            commanded_throttle -= throttle_step
-
-        commanded_throttle = clamp(commanded_throttle, 0, 1)
-
-        # roll
-        commanded_thrust_vector.x = clamp(commanded_thrust_vector.x, -MAX_ROLL, MAX_ROLL)
-        # pitch
-        commanded_thrust_vector.y = clamp(commanded_thrust_vector.y, -MAX_VECTOR, MAX_VECTOR)
-        # yaw
-        commanded_thrust_vector.z = clamp(commanded_thrust_vector.z, -MAX_VECTOR, MAX_VECTOR)
+    handle_rud(delta)
 
 # handle throttle
 #    for i in range(24, 31):
@@ -423,11 +323,26 @@ func _process(delta):
         grids[3].commanded_angle += library.toRad(4 * 45.0 * commanded_thrust_vector.x)
 
 
-#func _input(ev):
-#    print("input type=%d" % typeof(ev))
-#    if ev is InputEventJoypadMotion:
 
+# rapid unscheduled disassembly
+func rud():
+    print('single_stage.rud')
+    if rud_state == RUD_NONE:
+        rud_state = RUD_RUDDING
+        rud_time = 0.0
 
+    
+
+func handle_rud(delta):
+    if rud_state == RUD_RUDDING:
+        rud_time += delta
+        if rud_time < RUD_TIME: 
+            for i in range(0, bfs.TOTAL_WINDOWS):
+                bfs.windows[i].translate(Vector3(1.0 * rud_time / RUD_TIME, 0.0, 0.0))
+        else:
+            rud_state = RUD_NONE
+        
+    
 
 
 

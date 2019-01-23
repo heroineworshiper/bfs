@@ -1,4 +1,4 @@
-# failed 2 stage model
+# no longer used 2 stage model
 
 
 
@@ -111,19 +111,6 @@ func tabulate_nodes(array, names):
     for i in range(0, names.size()):
         var node = find_node(names[i])
         array.append(node)
-
-#func apply_torque(want, accum, index):
-#    var step = 0
-#    if want != 0:
-#        if want > accum:
-#            step = 100
-#            if accum + step > want:
-#                step = want - accum
-#        elif want < accum:
-#            step = -100
-#            if accum + step < want:
-#                step = want - accum
-#    return step
 
 
 
@@ -363,6 +350,9 @@ func _process(delta):
 #        booster.apply_torque_impulse(
 #            Vector3(0, -true_thrust_vector.x * delta * TORQUE_FACTOR, 0))
     
+
+
+
 
 
 #func _input(ev):

@@ -1,0 +1,112 @@
+# -*- coding: utf-8 -*-
+
+
+# Big F*n simulator.
+# Create a grid fin
+
+import FreeCAD
+import math
+import Draft, Part
+
+def toRad(angle):
+    return angle * math.pi * 2.0 / 360.0
+
+# mm
+INNER_RADIUS = 4550.0
+OUTER_RADIUS = 4850.0
+
+HEIGHT2 = 3000.0
+GRID_SPACE = HEIGHT2 / 6.0
+WIDTH = GRID_SPACE * 5.0
+# radians covered by the width
+WIDTH_ANGLE = WIDTH / OUTER_RADIUS
+HEIGHT1 = GRID_SPACE * 5.0
+# intersections per strip
+INTERSECTIONS = 11.0
+doc = App.activeDocument()
+depth = Base.Vector(INNER_RADIUS - OUTER_RADIUS, 0, 0)
+
+
+def polarToXYZ(angle, radius, z):
+    x = radius * math.cos(angle)
+    y = -radius * math.sin(angle)
+    return Base.Vector(x, y, z)
+
+
+# make an arc between 2 points, with a height given
+# easier than using Draf.makeCircle
+def makeArc(point1, point2, height, extraPoint):
+    total = 16
+    result = []
+    steps = range(total)
+    if extraPoint:
+        steps = steps + 1
+    for i in steps:
+        fraction = float(i) / float(total)
+        x = fraction * (point2.x - point1.x) + point1.x
+        y = fraction * (point2.y - point1.y) + point1.y
+        z = fraction * (point2.z - point1.z) + point1.z
+        a = math.sin(fraction * math.pi) * height
+        result.append(Base.Vector(x + a, y, z))
+    return result
+
+
+
+def makeFace(startY, offset):
+    # points for the outer edge
+    outerPoints = []
+    # points for the inner, serrated edge
+    innerPoints = []
+    
+    
+    endY = startY + HEIGHT1
+    startX = -WIDTH_ANGLE / 2
+    endX = WIDTH_ANGLE / 2
+    for i in range(int(INTERSECTIONS)):
+        angle = startX + i / (INTERSECTIONS - 1) * WIDTH_ANGLE
+        y = startY + i / (INTERSECTIONS - 1) * HEIGHT1
+        if y >= 0 and y <= HEIGHT2:
+            point = polarToXYZ(angle, OUTER_RADIUS, y)
+            outerPoints.append(point)
+    
+    if len(outerPoints) >= 2:
+        # make the inner, serrated points
+        for i in range(len(outerPoints) - 1):
+            arc = makeArc(outerPoints[i] + depth, outerPoints[i + 1] + depth, 100.0, i == int(INTERSECTIONS) - 1)
+            innerPoints.extend(arc)
+        
+        # combine the points into a face
+        facePoints = []
+        for i in outerPoints:
+            facePoints.append(i + offset)
+        for i in range(len(innerPoints)):
+            facePoints.append(innerPoints[len(innerPoints) - i - 1] + offset)
+        facePoints.append(outerPoints[0] + offset)
+
+        return Draft.makeWire(facePoints, closed=False, face=True, support=None)
+    
+    
+    else:
+    
+        return None
+    
+    
+    
+    
+
+startY = -HEIGHT2
+while startY < HEIGHT2:
+    #if True:
+    #startY = 0
+    
+    
+    wire1 = makeFace(startY, Base.Vector(0.0, 2.0, 2.0))
+    wire2 = makeFace(startY, Base.Vector(0.0, -2.0, -2.0))
+    
+    if not wire1 is None:
+        loft = App.ActiveDocument.addObject('Part::Loft','Loft')
+        loft.Sections = [wire1, wire2]
+        loft.Solid = True
+
+    startY = startY + GRID_SPACE
+

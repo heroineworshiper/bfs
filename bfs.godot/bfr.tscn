@@ -1,12 +1,14 @@
-[gd_scene load_steps=10 format=2]
+[gd_scene load_steps=12 format=2]
 
 [ext_resource path="res://bfr.gd" type="Script" id=1]
 [ext_resource path="res://booster.tscn" type="PackedScene" id=2]
 [ext_resource path="res://raptor2.tscn" type="PackedScene" id=3]
 [ext_resource path="res://grid.tscn" type="PackedScene" id=4]
-[ext_resource path="res://bfs.tscn" type="PackedScene" id=5]
-[ext_resource path="res://assets/engine_start.wav" type="AudioStream" id=6]
-[ext_resource path="res://assets/engine_cutoff1.wav" type="AudioStream" id=7]
+[ext_resource path="res://assets/booster2.tscn" type="PackedScene" id=5]
+[ext_resource path="res://bfs.tscn" type="PackedScene" id=6]
+[ext_resource path="res://assets/ship2.tscn" type="PackedScene" id=7]
+[ext_resource path="res://assets/engine_start.wav" type="AudioStream" id=8]
+[ext_resource path="res://assets/engine_cutoff1.wav" type="AudioStream" id=9]
 
 [sub_resource type="BoxShape" id=1]
 
@@ -50,6 +52,7 @@ _sections_unfolded = [ "Transform" ]
 
 [node name="booster" parent="booster" index="0" instance=ExtResource( 2 )]
 transform = Transform( -1, -8.74228e-08, 0, 8.74228e-08, -1, 0, 0, 0, 1, 0, 0, 0 )
+visible = false
 
 [node name="booster raptor0" parent="booster" index="1" instance=ExtResource( 3 )]
 state = null
@@ -146,22 +149,25 @@ transform = Transform( 1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, -0.7580
 state = null
 
 [node name="grid0" parent="booster" index="32" instance=ExtResource( 4 )]
-transform = Transform( 0.707107, -0.707107, -3.09086e-08, 0, -4.37114e-08, 1, -0.707107, -0.707107, -3.09086e-08, 0, 28, 0 )
+transform = Transform( 0.707107, -0.707107, -3.09086e-08, 0, -4.37114e-08, 1, -0.707107, -0.707107, -3.09086e-08, 0, 37, 0 )
 
 [node name="grid1" parent="booster" index="33" instance=ExtResource( 4 )]
-transform = Transform( -0.707107, 0.707107, 3.09086e-08, 0, -4.37114e-08, 1, 0.707107, 0.707107, 3.09086e-08, 0, 28, 0 )
+transform = Transform( -0.707107, 0.707107, 3.09086e-08, 0, -4.37114e-08, 1, 0.707107, 0.707107, 3.09086e-08, 0, 37, 0 )
 
 [node name="grid2" parent="booster" index="34" instance=ExtResource( 4 )]
-transform = Transform( 0.707107, 0.707107, 3.09086e-08, 0, -4.37114e-08, 1, 0.707107, -0.707107, -3.09086e-08, 0, 28, 0 )
+transform = Transform( 0.707107, 0.707107, 3.09086e-08, 0, -4.37114e-08, 1, 0.707107, -0.707107, -3.09086e-08, 0, 37, 0 )
 
 [node name="grid3" parent="booster" index="35" instance=ExtResource( 4 )]
-transform = Transform( -0.766044, -0.642788, -2.80971e-08, 0, -4.37114e-08, 1, -0.642788, 0.766044, 3.34849e-08, 0, 28, 0 )
+transform = Transform( -0.766044, -0.642788, -2.80971e-08, 0, -4.37114e-08, 1, -0.642788, 0.766044, 3.34849e-08, 0, 37, 0 )
 
 [node name="CollisionShape" type="CollisionShape" parent="booster" index="36"]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -3e-06, 0, 0 )
 shape = SubResource( 1 )
 disabled = false
 _sections_unfolded = [ "Transform", "Visibility" ]
+
+[node name="booster2" parent="booster" index="37" instance=ExtResource( 5 )]
+transform = Transform( -1, 8.74228e-08, 0, -8.74228e-08, -1, 0, 0, 0, 1, 0, -29, 0 )
 
 [node name="ship" type="RigidBody" parent="." index="1"]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 82, 0 )
@@ -192,37 +198,48 @@ angular_velocity = Vector3( 0, 0, 0 )
 angular_damp = -1.0
 _sections_unfolded = [ "Transform" ]
 
-[node name="ship" parent="ship" index="0" instance=ExtResource( 5 )]
+[node name="ship" parent="ship" index="0" instance=ExtResource( 6 )]
 transform = Transform( 1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, -24, 0 )
+visible = false
 
 [node name="ship raptor0" parent="ship" index="1" instance=ExtResource( 3 )]
 transform = Transform( 0.707107, 1.0677e-07, 0.707107, 0, -1, 1.50996e-07, 0.707107, -1.0677e-07, -0.707107, 0, 1.81551, 0.83739 )
+visible = false
 state = null
 
 [node name="ship raptor1" parent="ship" index="2" instance=ExtResource( 3 )]
 transform = Transform( -0.707107, 1.10532e-10, -0.707107, -8.74228e-08, -1, 8.72665e-08, -0.707107, 1.23524e-07, 0.707107, 0, 1.80262, -0.822893 )
+visible = false
 state = null
 
 [node name="ship raptor2" parent="ship" index="3" instance=ExtResource( 3 )]
 transform = Transform( -0.707107, -4.92548e-08, -0.707107, -8.74228e-08, -1, 1.5708e-07, -0.707107, 1.72889e-07, 0.707107, 1.91545, 3.74852, 1.94233 )
+visible = false
 state = null
 
 [node name="ship raptor3" parent="ship" index="4" instance=ExtResource( 3 )]
 transform = Transform( 0.707107, -1.23524e-07, -0.707107, -8.74228e-08, -1, 8.72665e-08, -0.707107, 1.10532e-10, -0.707107, -2, 3.75, 2 )
+visible = false
 state = null
 
 [node name="ship raptor4" parent="ship" index="5" instance=ExtResource( 3 )]
 transform = Transform( 0.707107, -1.10532e-10, 0.707107, -8.74228e-08, -1, 8.72665e-08, 0.707107, -1.23524e-07, -0.707107, -2, 3.75, -2 )
+visible = false
 state = null
 
 [node name="ship raptor5" parent="ship" index="6" instance=ExtResource( 3 )]
 transform = Transform( -0.707107, 1.23524e-07, 0.707107, -8.74228e-08, -1, 8.72665e-08, 0.707107, -1.10532e-10, 0.707107, 2, 3.75, -2 )
+visible = false
 state = null
 
 [node name="CollisionShape2" type="CollisionShape" parent="ship" index="7"]
 transform = Transform( 1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0 )
 shape = SubResource( 2 )
 disabled = false
+_sections_unfolded = [ "Transform" ]
+
+[node name="ship2" parent="ship" index="8" instance=ExtResource( 7 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -14, 0 )
 _sections_unfolded = [ "Transform" ]
 
 [node name="DirectionalLight" type="DirectionalLight" parent="." index="2"]
@@ -253,7 +270,7 @@ directional_shadow_depth_range = 0
 directional_shadow_max_distance = 200.0
 
 [node name="audio1" type="AudioStreamPlayer" parent="." index="3"]
-stream = ExtResource( 6 )
+stream = ExtResource( 8 )
 volume_db = 0.0
 pitch_scale = 1.0
 autoplay = false
@@ -262,7 +279,7 @@ bus = "Master"
 _sections_unfolded = [ "Pause" ]
 
 [node name="engineCutoff" type="AudioStreamPlayer" parent="." index="4"]
-stream = ExtResource( 7 )
+stream = ExtResource( 9 )
 volume_db = 0.0
 pitch_scale = 1.0
 autoplay = false
